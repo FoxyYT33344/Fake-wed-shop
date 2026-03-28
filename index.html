@@ -44,7 +44,7 @@
         window.saveOrderToCloud = async (orderData) => {
             if (!db || !window.user) return true; 
             try {
-                const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'bess_json');
+                const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
                 await addDoc(ordersRef, { ...orderData, userId: window.user.uid, timestamp: serverTimestamp(), status: 'neu' });
                 return true;
             } catch (e) { return false; }
@@ -129,33 +129,37 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- SPRACH-PORTAL (Erster Schritt) -->
+    <!-- SPRACH-PORTAL (REIN ENGLISCH FÜR GLOBALE VERSTÄNDLICHKEIT) -->
     <div id="lang-portal" class="fixed inset-0 z-[2000] portal-overlay flex items-center justify-center p-6">
         <div class="max-w-4xl w-full text-center space-y-12">
             <div class="space-y-4">
-                <i class="fas fa-globe-europe text-6xl text-red-900 mb-4 opacity-50"></i>
-                <h2 class="text-5xl gothic-title text-white">Wähle deinen Ursprung</h2>
-                <p class="text-zinc-500 italic">In welcher Zunge fluchst du?</p>
+                <i class="fas fa-ghost text-6xl text-red-900 mb-4 opacity-50"></i>
+                <h2 class="text-5xl gothic-title text-white">Choose Your Origin</h2>
+                <p class="text-zinc-500 italic">In which tongue do you wish to curse?</p>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div onclick="selectLanguage('de')" class="lang-card p-8 rounded-lg group">
                     <span class="text-4xl block mb-4 group-hover:scale-110 transition-transform">🇩🇪</span>
-                    <h3 class="text-xl font-bold text-zinc-300">Deutsch</h3>
+                    <h3 class="text-xl font-bold text-zinc-300">German</h3>
+                    <p class="text-[10px] text-zinc-600 uppercase mt-2">Deutsch</p>
                 </div>
                 <div onclick="selectLanguage('en')" class="lang-card p-8 rounded-lg group">
                     <span class="text-4xl block mb-4 group-hover:scale-110 transition-transform">🇬🇧</span>
                     <h3 class="text-xl font-bold text-zinc-300">English</h3>
+                    <p class="text-[10px] text-zinc-600 uppercase mt-2">English</p>
                 </div>
                 <div onclick="selectLanguage('fr')" class="lang-card p-8 rounded-lg group">
                     <span class="text-4xl block mb-4 group-hover:scale-110 transition-transform">🇫🇷</span>
-                    <h3 class="text-xl font-bold text-zinc-300">Français</h3>
+                    <h3 class="text-xl font-bold text-zinc-300">French</h3>
+                    <p class="text-[10px] text-zinc-600 uppercase mt-2">Français</p>
                 </div>
             </div>
+            <p class="text-zinc-700 text-xs">The site will be localized after your selection.</p>
         </div>
     </div>
 
-    <!-- AGB PORTAL (Zweiter Schritt) -->
+    <!-- AB HIER ALLES DYNAMISCH ÜBERSETZT -->
     <div id="agb-overlay" class="fixed inset-0 z-[1000] hidden portal-overlay flex items-center justify-center p-6">
         <div class="max-w-2xl w-full bg-zinc-900 border-2 border-red-900 p-8 rounded-lg shadow-2xl text-center space-y-6">
             <i class="fas fa-scroll text-5xl text-red-800 mb-2"></i>
@@ -171,7 +175,7 @@
     <nav class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-40">
         <div>
             <h1 class="text-3xl gothic-title text-zinc-100 tracking-wider">Nevermore Boutique</h1>
-            <span id="user-status" class="text-[10px] uppercase tracking-widest text-zinc-500">Status: Visitor</span>
+            <span id="user-status-label" class="text-[10px] uppercase tracking-widest text-zinc-500"></span>
         </div>
         <div class="flex items-center gap-6">
             <button onclick="toggleCart()" class="relative p-3 hover:text-red-500 transition-colors group">
@@ -187,7 +191,7 @@
 
     <footer class="p-10 border-t border-zinc-800 text-center text-zinc-500 text-sm">
         <div class="mb-4 text-red-900"><i class="fas fa-skull text-2xl opacity-40"></i></div>
-        <p>&copy; 2020-2026 Fox Studios. All rights reserved.</p>
+        <p id="footer-text"></p>
     </footer>
 
     <!-- Warenkorb Sidebar -->
@@ -198,7 +202,7 @@
         </div>
         <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4 text-white"></div>
         <div class="p-6 border-t border-zinc-800 space-y-4 bg-zinc-900/50">
-            <div class="flex justify-between text-xl text-white"><span id="total-label">Total:</span><span id="cart-total">0.00 €</span></div>
+            <div class="flex justify-between text-xl text-white"><span id="total-label"></span><span id="cart-total">0.00 €</span></div>
             <button id="checkout-btn" onclick="openCheckout()" class="w-full py-4 btn-gothic rounded font-bold uppercase tracking-widest text-sm text-white"></button>
         </div>
     </div>
@@ -265,6 +269,8 @@
     <script>
         const translations = {
             de: {
+                status: "Status: Gast",
+                footer: "© 2020-2026 Fox Studios. Alle Rechte vorbehalten.",
                 agbTitle: "Haftungsausschluss der Ahnen",
                 agbContent: "<p>Halt ein, Wanderer!</p><p>Diese Website dient ausschließlich **Spaß- und Simulationszwecken**. Nichts auf dieser Seite ist echt.</p><p>Mit dem Betreten bestätigst du dies.</p>",
                 btnAccept: "Lesen...",
@@ -287,9 +293,12 @@
                 ppVerify: "Code eingeben",
                 ppConfirm: "Bestätigen",
                 placeholderName: "Name der Seele",
-                placeholderCard: "Kartennummer"
+                placeholderCard: "Kartennummer",
+                successMsg: "Die Zahlung war ein Erfolg."
             },
             en: {
+                status: "Status: Visitor",
+                footer: "© 2020-2026 Fox Studios. All rights reserved.",
                 agbTitle: "Ancestral Disclaimer",
                 agbContent: "<p>Halt, wanderer!</p><p>This website is for **fun and simulation purposes** only. Nothing on this site is real.</p><p>By entering, you confirm you understand this.</p>",
                 btnAccept: "Read...",
@@ -312,9 +321,12 @@
                 ppVerify: "Enter Code",
                 ppConfirm: "Confirm",
                 placeholderName: "Name of the Soul",
-                placeholderCard: "Card Number"
+                placeholderCard: "Card Number",
+                successMsg: "Payment was a success."
             },
             fr: {
+                status: "Statut : Visiteur",
+                footer: "© 2020-2026 Fox Studios. Tous droits réservés.",
                 agbTitle: "Avis des Ancêtres",
                 agbContent: "<p>Halte, voyageur !</p><p>Ce site est uniquement destiné à **l'amusement et la simulation**. Rien ici n'est réel.</p><p>En entrant, vous confirmez avoir compris.</p>",
                 btnAccept: "Lire...",
@@ -337,36 +349,47 @@
                 ppVerify: "Entrer le code",
                 ppConfirm: "Confirmer",
                 placeholderName: "Nom de l'âme",
-                placeholderCard: "Numéro de carte"
+                placeholderCard: "Numéro de carte",
+                successMsg: "Le paiement a réussi."
             }
         };
 
+        const productsData = {
+            de: [
+                { id: 1, name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits." },
+                { id: 2, name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter." },
+                { id: 3, name: "Schwarzer Regenschirm", price: 24.50, icon: "umbrella", desc: "Hält die Sonne fern." },
+                { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie." },
+                { id: 5, name: "Verfluchtes Amulett", price: 44.90, icon: "gem", desc: "Zieht Unglück (und Blicke) an." }
+            ],
+            en: [
+                { id: 1, name: "Deadly Nightshade", price: 13.99, icon: "leaf", desc: "Ornamental for the afterlife." },
+                { id: 2, name: "Thing", price: 66.60, icon: "hand-paper", desc: "Loyal companion." },
+                { id: 3, name: "Black Umbrella", price: 24.50, icon: "umbrella", desc: "Keeps the sun away." },
+                { id: 4, name: "Raven Typewriter", price: 120.00, icon: "keyboard", desc: "For dark poetry." },
+                { id: 5, name: "Cursed Amulet", price: 44.90, icon: "gem", desc: "Attracts bad luck (and looks)." }
+            ],
+            fr: [
+                { id: 1, name: "Belladone Mortelle", price: 13.99, icon: "leaf", desc: "Ornementale pour l'au-delà." },
+                { id: 2, name: "La Chose", price: 66.60, icon: "hand-paper", desc: "Compagnon fidèle." },
+                { id: 3, name: "Parapluie Noir", price: 24.50, icon: "umbrella", desc: "Éloigne le soleil." },
+                { id: 4, name: "Machine Raven", price: 120.00, icon: "keyboard", desc: "Pour la poésie sombre." },
+                { id: 5, name: "Amulette Maudite", price: 44.90, icon: "gem", desc: "Attire la malchance (et les regards)." }
+            ]
+        };
+
         let currentLang = 'de';
-        const originalTitle = "Nevermore Boutique | Mystery & Darkness";
-        const originalIcon = "shop.ico";
-        const paypalIcon = "payy.ico";
         let cart = [];
         let method = 'card';
         let ppCode = "";
 
-        const products = [
-            { id: 1, name: "Deadly Nightshade", price: 13.99, icon: "leaf", desc: "Ornamental for the afterlife." },
-            { id: 2, name: "Thing", price: 66.60, icon: "hand-paper", desc: "Loyal companion." },
-            { id: 3, name: "Black Umbrella", price: 24.50, icon: "umbrella", desc: "Keeps the sun away." },
-            { id: 4, name: "Raven Typewriter", price: 120.00, icon: "keyboard", desc: "For dark poetry." },
-            { id: 5, name: "Cursed Amulet", price: 44.90, icon: "gem", desc: "Attracts bad luck (and looks)." },
-            { id: 6, name: "Coffin Sleep Mask", price: 15.00, icon: "eye-slash", desc: "Rest in peace (for 8 hours)." },
-            { id: 7, name: "Poison Vial Set", price: 32.00, icon: "flask", desc: "Decorative vials. Do not drink!" },
-            { id: 8, name: "Web Lace", price: 8.50, icon: "spider", desc: "Finest weave from the cellar." },
-            { id: 9, name: "Ouija Board", price: 55.00, icon: "ghost", desc: "Talk to the ancestors." },
-            { id: 10, name: "Widow's Veil", price: 19.99, icon: "user-secret", desc: "Perfect for sad occasions." }
-        ];
-
+        // Auswahl-Logik: Sprach-Portal schließt, AGB öffnet in gewählter Sprache
         function selectLanguage(lang) {
             currentLang = lang;
             document.getElementById('lang-portal').classList.add('hidden');
             document.getElementById('agb-overlay').classList.remove('hidden');
             applyTranslations();
+            renderProducts();
             startAGBTimer();
         }
 
@@ -389,19 +412,43 @@
             document.getElementById('pp-cancel-btn').innerText = t.ppCancel;
             document.getElementById('pp-verify-title').innerText = t.ppVerify;
             document.getElementById('pp-confirm-btn').innerText = t.ppConfirm;
+            document.getElementById('user-status-label').innerText = t.status;
+            document.getElementById('footer-text').innerText = t.footer;
             
             document.getElementById('customer-name').placeholder = t.placeholderName;
             document.getElementById('card-input-placeholder').placeholder = t.placeholderCard;
+            
+            updateCart();
+        }
+
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            const data = productsData[currentLang];
+            if (grid) {
+                grid.innerHTML = data.map(p => `
+                    <div class="product-card p-6 rounded-lg flex flex-col items-center text-center">
+                        <div class="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-red-800">
+                            <i class="fas fa-${p.icon} text-3xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold mb-1 text-white">${p.name}</h3>
+                        <p class="text-xs text-zinc-500 italic mb-4">${p.desc}</p>
+                        <div class="mt-auto pt-4 flex justify-between w-full items-center">
+                            <span class="font-bold text-white">${p.price.toFixed(2)} €</span>
+                            <button onclick="addToCart(${p.id})" class="p-2 bg-zinc-700 hover:bg-red-900 rounded-full transition-colors text-white">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
 
         function startAGBTimer() {
             let timeLeft = 5;
             const btn = document.getElementById('accept-btn');
             const t = translations[currentLang];
-            
             btn.disabled = true;
             btn.innerText = `${t.btnAccept} (${timeLeft})`;
-
             const timer = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
@@ -421,39 +468,12 @@
         }
 
         function rejectAGB() {
-            window.close();
-            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:serif;font-size:2rem;text-align:center;padding:2rem;'>Access Denied.<br>Leave this place.</div>";
-        }
-
-        function changeFavicon(src) {
-            let link = document.getElementById('favicon');
-            if (link) link.href = src;
-        }
-
-        function init() {
-            const grid = document.getElementById('product-grid');
-            if (grid) {
-                grid.innerHTML = products.map(p => `
-                    <div class="product-card p-6 rounded-lg flex flex-col items-center text-center">
-                        <div class="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-red-800">
-                            <i class="fas fa-${p.icon} text-3xl"></i>
-                        </div>
-                        <h3 class="text-lg font-bold mb-1 text-white">${p.name}</h3>
-                        <p class="text-xs text-zinc-500 italic mb-4">${p.desc}</p>
-                        <div class="mt-auto pt-4 flex justify-between w-full items-center">
-                            <span class="font-bold text-white">${p.price.toFixed(2)} €</span>
-                            <button onclick="addToCart(${p.id})" class="p-2 bg-zinc-700 hover:bg-red-900 rounded-full transition-colors text-white">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-                `).join('');
-            }
-            updateCart();
+            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:serif;font-size:2rem;text-align:center;padding:2rem;'>EXIT.</div>";
         }
 
         function addToCart(id) {
-            cart.push(products.find(p => p.id === id));
+            const p = productsData[currentLang].find(prod => prod.id === id);
+            cart.push(p);
             updateCart();
             showToast(translations[currentLang].toastAdd);
         }
@@ -494,39 +514,24 @@
 
         function closeCheckout(clear = false) { 
             document.getElementById('checkout-modal').classList.add('hidden'); 
-            if(clear){ 
-                cart = []; 
-                updateCart(); 
-                if(!document.getElementById('cart-sidebar').classList.contains('translate-x-full')) toggleCart(); 
-            } 
+            if(clear){ cart = []; updateCart(); if(!document.getElementById('cart-sidebar').classList.contains('translate-x-full')) toggleCart(); } 
         }
 
         function selectPayment(m) { 
             method = m; 
             document.getElementById('opt-card').classList.toggle('border-red-900', m === 'card'); 
-            document.getElementById('opt-card').classList.toggle('bg-zinc-800', m === 'card'); 
             document.getElementById('opt-paypal').classList.toggle('border-blue-900', m === 'paypal'); 
-            document.getElementById('opt-paypal').classList.toggle('bg-zinc-800', m === 'paypal'); 
             document.getElementById('card-form').classList.toggle('hidden', m !== 'card'); 
         }
 
         function handlePaymentSubmit(e) { 
             e.preventDefault(); 
             if(method === 'paypal') { 
-                document.title = "Payy Pall Login"; 
-                changeFavicon(paypalIcon); 
                 document.getElementById('paypal-overlay').classList.remove('hidden'); 
-                document.getElementById('pp-login').classList.remove('hidden'); 
-            } else { 
-                finalizeOrder(); 
-            } 
+            } else { finalizeOrder(); } 
         }
 
-        function closePaypal() { 
-            document.getElementById('paypal-overlay').classList.add('hidden'); 
-            document.title = originalTitle; 
-            changeFavicon(originalIcon); 
-        }
+        function closePaypal() { document.getElementById('paypal-overlay').classList.add('hidden'); }
 
         function startPPVerify() { 
             ppCode = Math.floor(100000 + Math.random() * 900000).toString(); 
@@ -536,25 +541,18 @@
         }
 
         function checkPPCode() { 
-            if(document.getElementById('pp-input').value === ppCode) { 
-                closePaypal(); 
-                finalizeOrder(); 
-            } else { 
-                showToast("Code error."); 
-            } 
+            if(document.getElementById('pp-input').value === ppCode) { closePaypal(); finalizeOrder(); }
         }
 
         async function finalizeOrder() {
             const totalSum = cart.reduce((s, i) => s + i.price, 0).toFixed(2);
-            document.title = originalTitle;
-            changeFavicon(originalIcon);
             const success = await window.saveOrderToCloud({ 
                 customer: document.getElementById('customer-name').value, 
                 total: totalSum, 
                 items: cart.map(i => i.name) 
             });
             if (success) {
-                document.getElementById('final-price-msg').innerText = `${totalSum} € - Done.`;
+                document.getElementById('final-price-msg').innerText = `${totalSum} € - ${translations[currentLang].successMsg}`;
                 document.getElementById('checkout-container').classList.add('hidden');
                 document.getElementById('payment-success').classList.remove('hidden');
             }
@@ -565,8 +563,6 @@
             t.innerText = msg; t.style.opacity = "1";
             setTimeout(() => t.style.opacity = "0", 2500);
         }
-
-        window.onload = init;
     </script>
 </body>
 </html>
