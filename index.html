@@ -111,7 +111,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- AGB PORTAL (Eintritt mit Countdown) -->
+    <!-- AGB PORTAL (Eintritt mit Lese-Countdown) -->
     <div id="agb-overlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
         <div class="max-w-2xl w-full bg-zinc-900 border-2 border-red-900 p-8 rounded-lg shadow-2xl text-center space-y-6">
             <i class="fas fa-scroll text-5xl text-red-800 mb-2"></i>
@@ -123,7 +123,7 @@
             </div>
             <div class="flex flex-col md:flex-row gap-4 pt-6">
                 <button id="accept-btn" onclick="acceptAGB()" disabled class="flex-1 py-4 btn-gothic font-bold uppercase tracking-widest rounded transition-all">
-                    Warten... (5)
+                    Lesen... (5)
                 </button>
                 <button onclick="rejectAGB()" class="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase tracking-widest rounded transition-all">Ablehnen (Gehen)</button>
             </div>
@@ -257,7 +257,7 @@
                     btn.innerText = "Ich stimme zu";
                     btn.disabled = false;
                 } else {
-                    btn.innerText = `Warten... (${timeLeft})`;
+                    btn.innerText = `Lesen... (${timeLeft})`;
                 }
             }, 1000);
         }
@@ -297,7 +297,7 @@
                 `).join('');
             }
             updateCart();
-            startAGBTimer(); // Startet den Timer beim Laden
+            startAGBTimer();
         }
 
         function addToCart(id) {
