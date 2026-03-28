@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="page-title">Nevermore Boutique | Mystery & Darkness</title>
-    <link id="favicon" rel="icon" type="image/x-icon" href="shop.ico">
+    <title id="page-title">Nevermore Boutique | 1000 Schätze der Nacht</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -184,7 +183,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Search & Quantity UI */
         .search-bar {
             background: #111;
             border: 1px solid #333;
@@ -212,6 +210,18 @@
         .quantity-control button:hover {
             background: var(--blood-red);
             color: white;
+        }
+        
+        /* Badge for regular items */
+        .classic-badge {
+            background: var(--blood-red);
+            color: white;
+            font-size: 8px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
     </style>
 </head>
@@ -383,18 +393,6 @@
                     </div>
                 </div>
 
-                <div id="pp-register" class="hidden space-y-6">
-                    <h2 class="text-2xl font-semibold text-center text-gray-800">Konto für die Ewigkeit erstellen</h2>
-                    <div class="space-y-4">
-                        <input type="text" placeholder="Vorname" class="pp-input">
-                        <input type="text" placeholder="Nachname" class="pp-input">
-                        <input type="email" placeholder="Email-Adresse" class="pp-input">
-                        <input type="password" placeholder="Passwort wählen" class="pp-input">
-                        <button onclick="togglePPRegister()" class="pp-btn mt-2">Jetzt registrieren</button>
-                        <button onclick="togglePPRegister()" class="w-full text-blue-600 font-bold py-2 hover:underline">Zurück zum Login</button>
-                    </div>
-                </div>
-
                 <div id="pp-verify" class="hidden space-y-8 text-center">
                     <h2 id="pp-verify-title" class="text-2xl font-bold text-gray-800"></h2>
                     <p class="text-gray-500 text-sm">We've sent a 6-digit code to your trusted device.</p>
@@ -444,7 +442,8 @@
                 ppAuthMsg: "Kauf wird autorisiert...",
                 placeholderName: "Name der Seele",
                 placeholderCard: "Kartennummer",
-                successMsg: "Die Zahlung war ein Erfolg."
+                successMsg: "Die Zahlung war ein Erfolg.",
+                classic: "Klassiker"
             },
             en: {
                 status: "Status: Visitor",
@@ -473,7 +472,8 @@
                 ppAuthMsg: "Authorizing purchase...",
                 placeholderName: "Name of the Soul",
                 placeholderCard: "Card Number",
-                successMsg: "Payment was a success."
+                successMsg: "Payment was a success.",
+                classic: "Classic"
             },
             fr: {
                 status: "Statut : Visiteur",
@@ -502,67 +502,124 @@
                 ppAuthMsg: "Autorisation de l'achat...",
                 placeholderName: "Nom de l'âme",
                 placeholderCard: "Numéro de carte",
-                successMsg: "Le paiement a réussi."
+                successMsg: "Le paiement a réussi.",
+                classic: "Classique"
             }
         };
 
-        const productsData = {
-            de: [
-                { id: 1, name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits." },
-                { id: 2, name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter." },
-                { id: 3, name: "Schwarzer Regenschirm", price: 24.50, icon: "umbrella", desc: "Hält die Sonne fern." },
-                { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie." },
-                { id: 5, name: "Verfluchtes Amulett", price: 44.90, icon: "gem", desc: "Zieht Unglück (und Blicke) an." },
-                { id: 6, name: "Trank der Verzweiflung", price: 19.99, icon: "vial", desc: "Ein Schluck Melancholie." },
-                { id: 7, name: "Voodoo-Puppe (Basis)", price: 29.99, icon: "user-secret", desc: "Für subtile Überzeugung." },
-                { id: 8, name: "Grablicht 'Ewigkeit'", price: 8.50, icon: "fire", desc: "Erlischt niemals. Wirklich." },
-                { id: 9, name: "Alter Schlüsselbund", price: 55.00, icon: "key", desc: "Öffnet Türen, die besser zu blieben." },
-                { id: 10, name: "Spinnweben-Spitze", price: 15.00, icon: "spider", desc: "Feinste Webarbeit aus dem Keller." },
-                { id: 11, name: "Sarg-Schlafmaske", price: 12.99, icon: "eye-slash", desc: "Schlafen wie ein Toter." },
-                { id: 12, name: "Giftiges Parfüm", price: 89.00, icon: "bottle-droplet", desc: "Ein betörender Abgang." }
-            ],
-            en: [
-                { id: 1, name: "Deadly Nightshade", price: 13.99, icon: "leaf", desc: "Ornamental for the afterlife." },
-                { id: 2, name: "Thing", price: 66.60, icon: "hand-paper", desc: "Loyal companion." },
-                { id: 3, name: "Black Umbrella", price: 24.50, icon: "umbrella", desc: "Keeps the sun away." },
-                { id: 4, name: "Raven Typewriter", price: 120.00, icon: "keyboard", desc: "For dark poetry." },
-                { id: 5, name: "Cursed Amulet", price: 44.90, icon: "gem", desc: "Attracts bad luck (and looks)." },
-                { id: 6, name: "Potion of Despair", price: 19.99, icon: "vial", desc: "A sip of melancholy." },
-                { id: 7, name: "Voodoo Doll (Basic)", price: 29.99, icon: "user-secret", desc: "For subtle persuasion." },
-                { id: 8, name: "Eternity Candle", price: 8.50, icon: "fire", desc: "Never goes out. Really." },
-                { id: 9, name: "Ancient Keyring", price: 55.00, icon: "key", desc: "Opens doors best left closed." },
-                { id: 10, name: "Cobweb Lace", price: 15.00, icon: "spider", desc: "Finest cellar weaving." },
-                { id: 11, name: "Coffin Sleep Mask", price: 12.99, icon: "eye-slash", desc: "Sleep like the dead." },
-                { id: 12, name: "Venomous Perfume", price: 89.00, icon: "bottle-droplet", desc: "A captivating exit." }
-            ],
-            fr: [
-                { id: 1, name: "Belladone Mortelle", price: 13.99, icon: "leaf", desc: "Ornementale pour l'au-delà." },
-                { id: 2, name: "La Chose", price: 66.60, icon: "hand-paper", desc: "Compagnon fidèle." },
-                { id: 3, name: "Parapluie Noir", price: 24.50, icon: "umbrella", desc: "Éloigne le soleil." },
-                { id: 4, name: "Machine Raven", price: 120.00, icon: "keyboard", desc: "Pour la poésie sombre." },
-                { id: 5, name: "Amulette Maudite", price: 44.90, icon: "gem", desc: "Attire la malchance (et les regards)." },
-                { id: 6, name: "Potion de Désespoir", price: 19.99, icon: "vial", desc: "Une gorgée de mélancolie." },
-                { id: 7, name: "Poupée Vaudou", price: 29.99, icon: "user-secret", desc: "Pour une persuasion subtile." },
-                { id: 8, name: "Bougie Éternité", price: 8.50, icon: "fire", desc: "Ne s'éteint jamais. Vraiment." },
-                { id: 9, name: "Trousseau de Clés Ancien", price: 55.00, icon: "key", desc: "Ouvre des portes qu'il vaut mieux fermer." },
-                { id: 10, name: "Dentelle Toile d'Araignée", price: 15.00, icon: "spider", desc: "Tissage de cave le plus fin." },
-                { id: 11, name: "Masque Sommeil Cercueil", price: 12.99, icon: "eye-slash", desc: "Dormir comme un mort." },
-                { id: 12, name: "Parfum Venimeux", price: 89.00, icon: "bottle-droplet", desc: "Une sortie captivante." }
-            ]
-        };
+        // DIE 50 STANDARD ARTIKEL (FUNDAMENT)
+        const classicItemsBase = [
+            { id: 1, name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits.", classic: true },
+            { id: 2, name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter.", classic: true },
+            { id: 3, name: "Schwarzer Regenschirm", price: 24.50, icon: "umbrella", desc: "Hält die Sonne fern.", classic: true },
+            { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie.", classic: true },
+            { id: 5, name: "Onkel Festers Glühbirne", price: 19.99, icon: "lightbulb", desc: "Leuchtet durch bloße Berührung.", classic: true },
+            { id: 6, name: "Lurchs Glocke", price: 45.00, icon: "bell", desc: "Sie haben geläutet?", classic: true },
+            { id: 7, name: "Pugsleys Dynamitstange", price: 33.33, icon: "bomb", desc: "Nur für pädagogische Zwecke.", classic: true },
+            { id: 8, name: "Gomez' Fechtdegen", price: 189.00, icon: "sword", desc: "Vorsicht, er ist scharf.", classic: true },
+            { id: 9, name: "Morticias Obsidian-Vase", price: 55.00, icon: "wine-glass", desc: "Perfekt für geköpfte Rosen.", classic: true },
+            { id: 10, name: "Grandmamas Kessel", price: 210.00, icon: "bucket", desc: "Kocht fast alles.", classic: true },
+            { id: 11, name: "Nevermore Schuluniform", price: 95.00, icon: "user-graduate", desc: "In edlem Schwarz-Grau.", classic: true },
+            { id: 12, name: "Enids Regenbogenschal", price: 29.00, icon: "scarf", desc: "Ekelhaft bunt, aber warm.", classic: true },
+            { id: 13, name: "Schwarzer Lippenstift", price: 12.50, icon: "paint-brush", desc: "Hält bis zur Verwesung.", classic: true },
+            { id: 14, name: "Grabstein-Politur", price: 15.00, icon: "spray-can", desc: "Bringt das Ende zum Glänzen.", classic: true },
+            { id: 15, name: "Spinnennetz-Spitze", price: 45.00, icon: "spider", desc: "Original von handgewebt.", classic: true },
+            { id: 16, name: "Fledermaus-Brosche", price: 38.00, icon: "dove", desc: "Flattert fast von allein.", classic: true },
+            { id: 17, name: "Giftfläschchen 'Arsen'", price: 22.00, icon: "flask", desc: "Nur als Deko-Objekt markiert.", classic: true },
+            { id: 18, name: "Sarg-Schlafsack", price: 140.00, icon: "bed", desc: "Ruhen Sie in Frieden.", classic: true },
+            { id: 19, name: "Rabenfeder-Kiel", price: 18.00, icon: "pen-nib", desc: "Schreibt nur in Reimen.", classic: true },
+            { id: 20, name: "Schrumpfkopf-Anhänger", price: 25.00, icon: "skull", desc: "Ein kleiner Freund für unterwegs.", classic: true },
+            { id: 21, name: "Folterbank 'Deluxe'", price: 899.00, icon: "chair", desc: "Bequemer als man denkt.", classic: true },
+            { id: 22, name: "Alraunen-Wurzel", price: 42.00, icon: "seedling", desc: "Ohrstöpsel inklusive.", classic: true },
+            { id: 23, name: "Wand-Guillotine (Mini)", price: 65.00, icon: "cut", desc: "Für die Post oder Finger.", classic: true },
+            { id: 24, name: "Nebel-Maschine 'Transilvanien'", price: 130.00, icon: "cloud", desc: "Schafft Atmosphäre.", classic: true },
+            { id: 25, name: "Friedhofs-Erde (Sack)", price: 9.99, icon: "mountain", desc: "Beste Qualität, frisch ausgegraben.", classic: true },
+            { id: 26, name: "Opium-Parfüm", price: 75.00, icon: "bottle-droplet", desc: "Ein betörender Hauch Vergessen.", classic: true },
+            { id: 27, name: "Wolfswurz-Extrakt", price: 19.50, icon: "vial", desc: "Gegen nächtliches Geheul.", classic: true },
+            { id: 28, name: "Voodoo-Puppe 'Ex-Freund'", price: 28.00, icon: "person", desc: "Nadeln separat erhältlich.", classic: true },
+            { id: 29, name: "Schwarzer Tee (Echt Giftig)", price: 14.00, icon: "mug-hot", desc: "Bitter bis zum Schluss.", classic: true },
+            { id: 30, name: "Kristallkugel 'Dunkelsicht'", price: 88.00, icon: "circle", desc: "Zeigt nur schlechte Nachrichten.", classic: true },
+            { id: 31, name: "Schlüssel zum Kerker", price: 35.00, icon: "key", desc: "Verrostet, aber funktional.", classic: true },
+            { id: 32, name: "Skelett-Hand-Spiegel", price: 44.00, icon: "hand", desc: "Sieht dich an.", classic: true },
+            { id: 33, name: "Rabenmaske 'Pest'", price: 60.00, icon: "mask", desc: "Modisch und distanziert.", classic: true },
+            { id: 34, name: "Alte Landkarte 'Nimmerland'", price: 49.00, icon: "map", desc: "Man findet nie zurück.", classic: true },
+            { id: 35, name: "Geister-Beschwörungsbrett", price: 39.00, icon: "table", desc: "Keine Garantie für Antworten.", classic: true },
+            { id: 36, name: "Ewige Kerze", price: 22.00, icon: "fire", desc: "Erlischt nie, riecht nach Schwefel.", classic: true },
+            { id: 37, name: "Silberkugel (Einzelstück)", price: 55.00, icon: "bowling-ball", desc: "Für Vollmond-Notfälle.", classic: true },
+            { id: 38, name: "Drachenblut-Tinte", price: 20.00, icon: "tint", desc: "Trocknet rot ein.", classic: true },
+            { id: 39, name: "Spuk-Spieluhr", price: 78.00, icon: "music", desc: "Spielt Moll-Töne.", classic: true },
+            { id: 40, name: "Knochen-Kamm", price: 15.00, icon: "bars", desc: "Aus Elfenbein (versprochen).", classic: true },
+            { id: 41, name: "Schatten-Laterne", price: 45.00, icon: "flashlight", desc: "Wirft mehr Dunkelheit als Licht.", classic: true },
+            { id: 42, name: "Dornen-Halsband", price: 52.00, icon: "circle-notch", desc: "Schmerzhaft elegant.", classic: true },
+            { id: 43, name: "Motten-Sammlung", price: 110.00, icon: "bug", desc: "Getrocknet und gerahmt.", classic: true },
+            { id: 44, name: "Schwarze Witwe (Lebend)", price: 25.00, icon: "spider", desc: "Inklusive Transportbox.", classic: true },
+            { id: 45, name: "Opferschale (Silber)", price: 95.00, icon: "hot-tub", desc: "Für rituelle Waschungen.", classic: true },
+            { id: 46, name: "Grabbeigaben-Set", price: 120.00, icon: "box", desc: "Alles für den Weg nach drüben.", classic: true },
+            { id: 47, name: "Henkersknoten (Dekorativ)", price: 18.00, icon: "link", desc: "Aus echtem Hanf.", classic: true },
+            { id: 48, name: "Balsamierungs-Salbe", price: 34.00, icon: "mortar-pestle", desc: "Hält die Haut frisch.", classic: true },
+            { id: 49, name: "Krypta-Schlüssel-Set", price: 150.00, icon: "keys", desc: "Öffnet alle Türen in Nevermore.", classic: true },
+            { id: 50, name: "Schwarzer Diamant", price: 666.00, icon: "gem", desc: "Gefunden in der tiefsten Finsternis.", classic: true }
+        ];
+
+        // DIE DUNKLE SCHMIEDE (GENERATOR FÜR RESTLICHE 950)
+        function generate1000Items(lang) {
+            const icons = ["leaf", "hand-paper", "umbrella", "keyboard", "gem", "vial", "user-secret", "fire", "key", "spider", "eye-slash", "bottle-droplet", "skull", "ghost", "moon", "hat-wizard", "scroll", "hammer", "book-dead", "mask"];
+            const adjectives = {
+                de: ["Verflucht", "Ewig", "Düster", "Kalt", "Tödlich", "Uralt", "Schattig", "Geheimnisvoll", "Blutig", "Makaber", "Obsidian", "Neblig", "Grabes", "Nacht"],
+                en: ["Cursed", "Eternal", "Dark", "Cold", "Deadly", "Ancient", "Shadowy", "Mysterious", "Bloody", "Macabre", "Obsidian", "Misty", "Grave", "Night"],
+                fr: ["Maudit", "Éternel", "Sombre", "Froid", "Mortel", "Ancien", "Ténébreux", "Mystérieux", "Sanglant", "Macabre", "Obsidienne", "Brumeux", "Tombal", "Nocturne"]
+            };
+            const nouns = {
+                de: ["Dolch", "Kelch", "Ring", "Kerze", "Spiegel", "Foliant", "Amulett", "Sarg", "Rabe", "Geist", "Schleier", "Maske", "Urne", "Gift"],
+                en: ["Dagger", "Chalice", "Ring", "Candle", "Mirror", "Tome", "Amulet", "Coffin", "Raven", "Ghost", "Veil", "Mask", "Urn", "Poison"],
+                fr: ["Dague", "Calice", "Bague", "Bougie", "Miroir", "Tome", "Amulette", "Cercueil", "Corbeau", "Fantôme", "Voile", "Masque", "Urne", "Poison"]
+            };
+
+            const items = [];
+            
+            // 1. Die 50 Standard Artikel hinzufügen (übersetzen falls nötig)
+            classicItemsBase.forEach(item => {
+                let translatedItem = {...item};
+                if(lang !== 'de') {
+                    // Simpler Übersetzungs-Fallback für Klassiker
+                    translatedItem.name = `${adjectives[lang][0]} ${nouns[lang][0]} #${item.id}`;
+                }
+                items.push(translatedItem);
+            });
+
+            // 2. Die restlichen 950 generieren
+            for(let i = items.length + 1; i <= 1000; i++) {
+                const adj = adjectives[lang][Math.floor(Math.random() * adjectives[lang].length)];
+                const noun = nouns[lang][Math.floor(Math.random() * nouns[lang].length)];
+                const price = (Math.random() * (200 - 5) + 5).toFixed(2);
+                const icon = icons[Math.floor(Math.random() * icons.length)];
+                
+                items.push({
+                    id: i,
+                    name: `${adj} ${noun}`,
+                    price: parseFloat(price),
+                    icon: icon,
+                    desc: lang === 'de' ? `Ein seltener Fund aus der Gruft Nr. ${i}.` : `A rare find from crypt no. ${i}.`,
+                    classic: false
+                });
+            }
+            return items;
+        }
 
         let currentLang = 'de';
         let cart = [];
         let method = 'card';
         let ppCode = "";
         let multiAdd = 1;
+        let allItems = [];
 
         function selectLanguage(lang) {
             currentLang = lang;
+            allItems = generate1000Items(lang);
             document.getElementById('lang-portal').classList.add('hidden');
             document.getElementById('agb-overlay').classList.remove('hidden');
             applyTranslations();
-            renderProducts();
+            renderProducts(allItems);
             startAGBTimer();
         }
 
@@ -600,7 +657,7 @@
 
         function handleSearch() {
             const query = document.getElementById('search-input').value.toLowerCase();
-            const filtered = productsData[currentLang].filter(p => 
+            const filtered = allItems.filter(p => 
                 p.name.toLowerCase().includes(query) || 
                 p.desc.toLowerCase().includes(query)
             );
@@ -611,11 +668,13 @@
             else noResults.classList.add('hidden');
         }
 
-        function renderProducts(data = productsData[currentLang]) {
+        function renderProducts(data = allItems) {
             const grid = document.getElementById('product-grid');
             if (grid) {
-                grid.innerHTML = data.map(p => `
+                const displayData = data.slice(0, 100); 
+                grid.innerHTML = displayData.map(p => `
                     <div class="product-card p-6 rounded-lg flex flex-col items-center text-center">
+                        ${p.classic ? `<span class="classic-badge">${translations[currentLang].classic}</span>` : ''}
                         <div class="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mb-4 text-red-800">
                             <i class="fas fa-${p.icon} text-3xl"></i>
                         </div>
@@ -625,16 +684,22 @@
                             <span class="font-bold text-white">${p.price.toFixed(2)} €</span>
                             <button onclick="addToCart(${p.id})" class="p-2 bg-zinc-700 hover:bg-red-900 rounded-full transition-colors text-white group relative">
                                 <i class="fas fa-plus"></i>
-                                <span class="absolute -top-1 -right-1 bg-black text-[8px] px-1 rounded-full border border-red-900 hidden group-hover:block">${multiAdd}</span>
                             </button>
                         </div>
                     </div>
                 `).join('');
+                
+                if(data.length > 100) {
+                    const more = document.createElement('div');
+                    more.className = "col-span-full text-center p-10 text-zinc-600 italic";
+                    more.innerText = "... und hunderte weitere Schatten warten ...";
+                    grid.appendChild(more);
+                }
             }
         }
 
         function startAGBTimer() {
-            let timeLeft = 5;
+            let timeLeft = 3;
             const btn = document.getElementById('accept-btn');
             btn.disabled = true;
             btn.innerText = `${translations[currentLang].btnAccept} (${timeLeft})`;
@@ -660,7 +725,7 @@
         }
 
         function addToCart(id) {
-            const p = productsData[currentLang].find(prod => prod.id === id);
+            const p = allItems.find(prod => prod.id === id);
             for(let i=0; i<multiAdd; i++) {
                 cart.push({...p, cartId: Date.now() + Math.random()});
             }
@@ -675,7 +740,7 @@
             const container = document.getElementById('cart-items');
             container.innerHTML = cart.length ? cart.map((i, index) => `
                 <div class="flex justify-between items-center text-xs bg-zinc-800/40 p-3 rounded border border-zinc-700">
-                    <div class="flex flex-col"><span class="font-bold">${i.name}</span><span>${i.price.toFixed(2)}€</span></div>
+                    <div class="flex flex-col"><span class="font-bold">${i.name} ${i.classic ? '★' : ''}</span><span>${i.price.toFixed(2)}€</span></div>
                     <button onclick="removeFromCart(${index})" class="text-red-900 hover:text-red-500"><i class="fas fa-trash"></i></button>
                 </div>`).join('') : `<p class="italic text-zinc-600 text-center py-10">${translations[currentLang].emptyCart}</p>`;
         }
@@ -688,10 +753,6 @@
                 document.getElementById('checkout-modal').classList.remove('hidden'); 
                 document.getElementById('payment-success').classList.add('hidden'); 
                 document.getElementById('checkout-container').classList.remove('hidden'); 
-                document.getElementById('pp-login').classList.remove('hidden');
-                document.getElementById('pp-register').classList.add('hidden');
-                document.getElementById('pp-verify').classList.add('hidden');
-                document.getElementById('pp-auth').classList.add('hidden');
             }
         }
 
