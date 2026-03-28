@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Nevermore Boutique | Mystery & Darkness</title>
-    <!-- Dein Shop-Icon -->
     <link id="favicon" rel="icon" type="image/x-icon" href="shop.ico">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -97,7 +96,6 @@
 
         .btn-gothic:hover:not(:disabled) { background: #700606; letter-spacing: 2px; }
         
-        /* Strengere Deaktivierung */
         .btn-gothic:disabled { 
             background: #1a1a1a !important; 
             color: #444 !important; 
@@ -106,9 +104,21 @@
             opacity: 0.6;
         }
 
-        #agb-overlay {
-            background: rgba(0,0,0,0.98);
-            backdrop-filter: blur(15px);
+        .portal-overlay {
+            background: rgba(0,0,0,0.99);
+            backdrop-filter: blur(20px);
+        }
+
+        .lang-card {
+            background: #111;
+            border: 1px solid #222;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .lang-card:hover {
+            border-color: var(--blood-red);
+            background: #1a0000;
         }
 
         .pulse-red { animation: pulse-red 2s infinite; }
@@ -119,22 +129,41 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- AGB PORTAL -->
-    <div id="agb-overlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+    <!-- SPRACH-PORTAL (Erster Schritt) -->
+    <div id="lang-portal" class="fixed inset-0 z-[2000] portal-overlay flex items-center justify-center p-6">
+        <div class="max-w-4xl w-full text-center space-y-12">
+            <div class="space-y-4">
+                <i class="fas fa-globe-europe text-6xl text-red-900 mb-4 opacity-50"></i>
+                <h2 class="text-5xl gothic-title text-white">Wähle deinen Ursprung</h2>
+                <p class="text-zinc-500 italic">In welcher Zunge fluchst du?</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div onclick="selectLanguage('de')" class="lang-card p-8 rounded-lg group">
+                    <span class="text-4xl block mb-4 group-hover:scale-110 transition-transform">🇩🇪</span>
+                    <h3 class="text-xl font-bold text-zinc-300">Deutsch</h3>
+                </div>
+                <div onclick="selectLanguage('en')" class="lang-card p-8 rounded-lg group">
+                    <span class="text-4xl block mb-4 group-hover:scale-110 transition-transform">🇬🇧</span>
+                    <h3 class="text-xl font-bold text-zinc-300">English</h3>
+                </div>
+                <div onclick="selectLanguage('fr')" class="lang-card p-8 rounded-lg group">
+                    <span class="text-4xl block mb-4 group-hover:scale-110 transition-transform">🇫🇷</span>
+                    <h3 class="text-xl font-bold text-zinc-300">Français</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AGB PORTAL (Zweiter Schritt) -->
+    <div id="agb-overlay" class="fixed inset-0 z-[1000] hidden portal-overlay flex items-center justify-center p-6">
         <div class="max-w-2xl w-full bg-zinc-900 border-2 border-red-900 p-8 rounded-lg shadow-2xl text-center space-y-6">
             <i class="fas fa-scroll text-5xl text-red-800 mb-2"></i>
-            <h2 class="text-4xl gothic-title text-white">Haftungsausschluss der Ahnen</h2>
-            <div class="text-zinc-400 space-y-4 text-lg italic">
-                <p>Halt ein, Wanderer!</p>
-                <p>Diese Website dient ausschließlich **Spaß- und Simulationszwecken**. Nichts auf dieser Seite – weder die Waren, noch die Transaktionen – ist echt oder rechtsverbindlich.</p>
-                <p>Mit dem Betreten der Boutique bestätigst du, dass du dies verstanden hast und bereit bist, dich auf dieses schaurige Rollenspiel einzulassen.</p>
-            </div>
+            <h2 id="agb-title" class="text-4xl gothic-title text-white tracking-widest"></h2>
+            <div id="agb-content" class="text-zinc-400 space-y-4 text-lg italic"></div>
             <div class="flex flex-col md:flex-row gap-4 pt-6">
-                <!-- Button ist standardmäßig per HTML disabled -->
-                <button id="accept-btn" onclick="acceptAGB()" disabled class="flex-1 py-4 btn-gothic font-bold uppercase tracking-widest rounded transition-all">
-                    Lesen... (5)
-                </button>
-                <button onclick="rejectAGB()" class="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase tracking-widest rounded transition-all">Ablehnen (Gehen)</button>
+                <button id="accept-btn" onclick="acceptAGB()" disabled class="flex-1 py-4 btn-gothic font-bold uppercase tracking-widest rounded transition-all"></button>
+                <button id="reject-btn" onclick="rejectAGB()" class="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase tracking-widest rounded transition-all"></button>
             </div>
         </div>
     </div>
@@ -142,7 +171,7 @@
     <nav class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-40">
         <div>
             <h1 class="text-3xl gothic-title text-zinc-100 tracking-wider">Nevermore Boutique</h1>
-            <span id="user-status" class="text-[10px] uppercase tracking-widest text-zinc-500">Status: Gast</span>
+            <span id="user-status" class="text-[10px] uppercase tracking-widest text-zinc-500">Status: Visitor</span>
         </div>
         <div class="flex items-center gap-6">
             <button onclick="toggleCart()" class="relative p-3 hover:text-red-500 transition-colors group">
@@ -158,19 +187,19 @@
 
     <footer class="p-10 border-t border-zinc-800 text-center text-zinc-500 text-sm">
         <div class="mb-4 text-red-900"><i class="fas fa-skull text-2xl opacity-40"></i></div>
-        <p>&copy; 2020-2026 Fox Studios. Alle Rechte bei den Entwicklern.</p>
+        <p>&copy; 2020-2026 Fox Studios. All rights reserved.</p>
     </footer>
 
     <!-- Warenkorb Sidebar -->
     <div id="cart-sidebar" class="fixed inset-y-0 right-0 w-full md:w-96 cart-sidebar z-50 transform translate-x-full shadow-2xl flex flex-col">
         <div class="p-6 border-b border-zinc-800 flex justify-between items-center">
-            <h3 class="text-2xl gothic-title text-white">Deine Beute</h3>
+            <h3 id="cart-title" class="text-2xl gothic-title text-white"></h3>
             <button onclick="toggleCart()" class="text-zinc-500 hover:text-white"><i class="fas fa-times text-xl"></i></button>
         </div>
         <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4 text-white"></div>
         <div class="p-6 border-t border-zinc-800 space-y-4 bg-zinc-900/50">
-            <div class="flex justify-between text-xl text-white"><span>Total:</span><span id="cart-total">0.00 €</span></div>
-            <button onclick="openCheckout()" class="w-full py-4 btn-gothic rounded font-bold uppercase tracking-widest text-sm text-white">Zur Hinrichtung</button>
+            <div class="flex justify-between text-xl text-white"><span id="total-label">Total:</span><span id="cart-total">0.00 €</span></div>
+            <button id="checkout-btn" onclick="openCheckout()" class="w-full py-4 btn-gothic rounded font-bold uppercase tracking-widest text-sm text-white"></button>
         </div>
     </div>
 
@@ -179,31 +208,31 @@
         <div class="absolute inset-0 bg-black/90" onclick="closeCheckout()"></div>
         <div class="relative bg-zinc-900 border-2 border-red-900 w-full max-w-lg p-8 rounded-lg shadow-2xl overflow-y-auto max-h-[90vh]">
             <div id="checkout-container">
-                <h2 class="text-3xl gothic-title mb-6 text-center text-red-700">Letztes Geleit</h2>
+                <h2 id="checkout-title" class="text-3xl gothic-title mb-6 text-center text-red-700"></h2>
                 <form id="checkout-form" onsubmit="handlePaymentSubmit(event)" class="space-y-6">
                     <div class="space-y-2">
-                        <label class="text-xs uppercase tracking-widest text-zinc-500">Dein Name</label>
-                        <input type="text" id="customer-name" placeholder="Name der Seele" required class="w-full p-3 rounded dark-input">
+                        <label id="name-label" class="text-xs uppercase tracking-widest text-zinc-500"></label>
+                        <input type="text" id="customer-name" required class="w-full p-3 rounded dark-input">
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-white">
                         <div id="opt-card" onclick="selectPayment('card')" class="payment-option p-4 rounded text-center active cursor-pointer border border-zinc-700">
-                            <i class="fas fa-credit-card mb-2 block"></i><span class="text-xs">KARTE</span>
+                            <i class="fas fa-credit-card mb-2 block"></i><span id="card-label" class="text-xs"></span>
                         </div>
                         <div id="opt-paypal" onclick="selectPayment('paypal')" class="payment-option p-4 rounded text-center cursor-pointer border border-zinc-700">
                             <i class="fab fa-paypal mb-2 block text-blue-500"></i><span class="text-xs">PAYY PALL</span>
                         </div>
                     </div>
                     <div id="card-form" class="space-y-4">
-                        <input type="text" placeholder="Kartennummer" maxlength="16" class="w-full p-3 rounded dark-input">
+                        <input type="text" id="card-input-placeholder" maxlength="16" class="w-full p-3 rounded dark-input">
                     </div>
-                    <button type="submit" id="pay-button" class="w-full py-4 btn-gothic rounded font-bold uppercase tracking-widest text-white">Besiegeln</button>
+                    <button type="submit" id="pay-button" class="w-full py-4 btn-gothic rounded font-bold uppercase tracking-widest text-white"></button>
                 </form>
             </div>
             <div id="payment-success" class="hidden text-center py-10 space-y-6">
                 <div class="pulse-red"><i class="fas fa-skull text-8xl text-red-800"></i></div>
-                <h3 class="text-4xl gothic-title text-white">Es ist vollbracht.</h3>
+                <h3 id="success-title" class="text-4xl gothic-title text-white"></h3>
                 <p class="text-xl text-red-500 font-bold" id="final-price-msg"></p>
-                <button onclick="closeCheckout(true)" class="px-10 py-3 bg-red-900/20 border border-red-900 text-red-500 hover:bg-red-900 hover:text-white transition-all rounded uppercase text-xs tracking-widest">Zurück</button>
+                <button id="back-btn" onclick="closeCheckout(true)" class="px-10 py-3 bg-red-900/20 border border-red-900 text-red-500 hover:bg-red-900 hover:text-white transition-all rounded uppercase text-xs tracking-widest"></button>
             </div>
         </div>
     </div>
@@ -216,17 +245,17 @@
                     <i class="fab fa-paypal text-blue-800 text-3xl"></i>
                     <span class="text-2xl font-bold italic text-blue-900">Payy Pall</span>
                 </div>
-                <h2 class="text-xl font-light">Mit Payy Pall bezahlen</h2>
+                <h2 id="pp-title" class="text-xl font-light"></h2>
                 <input type="text" placeholder="E-Mail" class="w-full p-4 border rounded">
                 <input type="password" placeholder="Passwort" class="w-full p-4 border rounded">
-                <button onclick="startPPVerify()" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold">Einloggen</button>
-                <button onclick="closePaypal()" class="w-full text-xs text-gray-400 mt-2">Abbrechen</button>
+                <button id="pp-login-btn" onclick="startPPVerify()" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold"></button>
+                <button id="pp-cancel-btn" onclick="closePaypal()" class="w-full text-xs text-gray-400 mt-2"></button>
             </div>
             <div id="pp-verify" class="hidden space-y-6 text-center py-10">
-                <h2 class="text-xl font-bold">Code eingeben</h2>
+                <h2 id="pp-verify-title" class="text-xl font-bold"></h2>
                 <p id="generated-code" class="text-2xl font-mono text-blue-800">123456</p>
                 <input type="text" id="pp-input" maxlength="6" class="w-full p-4 text-center text-3xl border rounded">
-                <button onclick="checkPPCode()" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold">Bestätigen</button>
+                <button id="pp-confirm-btn" onclick="checkPPCode()" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold"></button>
             </div>
         </div>
     </div>
@@ -234,6 +263,85 @@
     <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-zinc-800 border border-red-900 px-6 py-3 rounded-full opacity-0 transition-opacity z-[300] pointer-events-none text-white text-sm"></div>
 
     <script>
+        const translations = {
+            de: {
+                agbTitle: "Haftungsausschluss der Ahnen",
+                agbContent: "<p>Halt ein, Wanderer!</p><p>Diese Website dient ausschließlich **Spaß- und Simulationszwecken**. Nichts auf dieser Seite ist echt.</p><p>Mit dem Betreten bestätigst du dies.</p>",
+                btnAccept: "Lesen...",
+                btnAccepted: "Ich stimme zu",
+                btnReject: "Ablehnen (Gehen)",
+                cartTitle: "Deine Beute",
+                checkoutBtn: "Zur Hinrichtung",
+                total: "Total:",
+                checkoutTitle: "Letztes Geleit",
+                nameLabel: "Dein Name",
+                cardLabel: "KARTE",
+                payBtn: "Besiegeln",
+                successTitle: "Es ist vollbracht.",
+                backBtn: "Zurück",
+                toastAdd: "Beute gesichert.",
+                emptyCart: "Leer wie ein Grab.",
+                ppTitle: "Mit Payy Pall bezahlen",
+                ppLogin: "Einloggen",
+                ppCancel: "Abbrechen",
+                ppVerify: "Code eingeben",
+                ppConfirm: "Bestätigen",
+                placeholderName: "Name der Seele",
+                placeholderCard: "Kartennummer"
+            },
+            en: {
+                agbTitle: "Ancestral Disclaimer",
+                agbContent: "<p>Halt, wanderer!</p><p>This website is for **fun and simulation purposes** only. Nothing on this site is real.</p><p>By entering, you confirm you understand this.</p>",
+                btnAccept: "Read...",
+                btnAccepted: "I agree",
+                btnReject: "Reject (Leave)",
+                cartTitle: "Your Loot",
+                checkoutBtn: "To Execution",
+                total: "Total:",
+                checkoutTitle: "Final Rites",
+                nameLabel: "Your Name",
+                cardLabel: "CARD",
+                payBtn: "Seal the Fate",
+                successTitle: "It is finished.",
+                backBtn: "Back",
+                toastAdd: "Loot secured.",
+                emptyCart: "Empty as a grave.",
+                ppTitle: "Pay with Payy Pall",
+                ppLogin: "Login",
+                ppCancel: "Cancel",
+                ppVerify: "Enter Code",
+                ppConfirm: "Confirm",
+                placeholderName: "Name of the Soul",
+                placeholderCard: "Card Number"
+            },
+            fr: {
+                agbTitle: "Avis des Ancêtres",
+                agbContent: "<p>Halte, voyageur !</p><p>Ce site est uniquement destiné à **l'amusement et la simulation**. Rien ici n'est réel.</p><p>En entrant, vous confirmez avoir compris.</p>",
+                btnAccept: "Lire...",
+                btnAccepted: "J'accepte",
+                btnReject: "Refuser (Partir)",
+                cartTitle: "Votre Butin",
+                checkoutBtn: "À l'Exécution",
+                total: "Total :",
+                checkoutTitle: "Derniers Rites",
+                nameLabel: "Votre Nom",
+                cardLabel: "CARTE",
+                payBtn: "Sceller le sort",
+                successTitle: "C'est accompli.",
+                backBtn: "Retour",
+                toastAdd: "Butin sécurisé.",
+                emptyCart: "Vide comme une tombe.",
+                ppTitle: "Payer avec Payy Pall",
+                ppLogin: "Se connecter",
+                ppCancel: "Annuler",
+                ppVerify: "Entrer le code",
+                ppConfirm: "Confirmer",
+                placeholderName: "Nom de l'âme",
+                placeholderCard: "Numéro de carte"
+            }
+        };
+
+        let currentLang = 'de';
         const originalTitle = "Nevermore Boutique | Mystery & Darkness";
         const originalIcon = "shop.ico";
         const paypalIcon = "payy.ico";
@@ -242,50 +350,79 @@
         let ppCode = "";
 
         const products = [
-            { id: 1, name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits." },
-            { id: 2, name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter." },
-            { id: 3, name: "Schwarzer Regenschirm", price: 24.50, icon: "umbrella", desc: "Hält die Sonne fern." },
-            { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie." },
-            { id: 5, name: "Verfluchtes Amulett", price: 44.90, icon: "gem", desc: "Zieht Unglück (und Blicke) an." },
-            { id: 6, name: "Sarg-Schlafmaske", price: 15.00, icon: "eye-slash", desc: "Ruhe in Frieden (für 8 Stunden)." },
-            { id: 7, name: "Giftfläschchen-Set", price: 32.00, icon: "flask", desc: "Dekorative Phiolen. Nicht trinken!" },
-            { id: 8, name: "Spinnennetz-Spitze", price: 8.50, icon: "spider", desc: "Feinste Webkunst aus dem Keller." },
-            { id: 9, name: "Geister-Beschwörungsbrett", price: 55.00, icon: "ghost", desc: "Für Gespräche mit den Ahnen." },
-            { id: 10, name: "Schwarze Witwen-Schleier", price: 19.99, icon: "user-secret", desc: "Perfekt für traurige Anlässe." }
+            { id: 1, name: "Deadly Nightshade", price: 13.99, icon: "leaf", desc: "Ornamental for the afterlife." },
+            { id: 2, name: "Thing", price: 66.60, icon: "hand-paper", desc: "Loyal companion." },
+            { id: 3, name: "Black Umbrella", price: 24.50, icon: "umbrella", desc: "Keeps the sun away." },
+            { id: 4, name: "Raven Typewriter", price: 120.00, icon: "keyboard", desc: "For dark poetry." },
+            { id: 5, name: "Cursed Amulet", price: 44.90, icon: "gem", desc: "Attracts bad luck (and looks)." },
+            { id: 6, name: "Coffin Sleep Mask", price: 15.00, icon: "eye-slash", desc: "Rest in peace (for 8 hours)." },
+            { id: 7, name: "Poison Vial Set", price: 32.00, icon: "flask", desc: "Decorative vials. Do not drink!" },
+            { id: 8, name: "Web Lace", price: 8.50, icon: "spider", desc: "Finest weave from the cellar." },
+            { id: 9, name: "Ouija Board", price: 55.00, icon: "ghost", desc: "Talk to the ancestors." },
+            { id: 10, name: "Widow's Veil", price: 19.99, icon: "user-secret", desc: "Perfect for sad occasions." }
         ];
 
-        // AGB Countdown Logik - Robust fixiert
+        function selectLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('lang-portal').classList.add('hidden');
+            document.getElementById('agb-overlay').classList.remove('hidden');
+            applyTranslations();
+            startAGBTimer();
+        }
+
+        function applyTranslations() {
+            const t = translations[currentLang];
+            document.getElementById('agb-title').innerText = t.agbTitle;
+            document.getElementById('agb-content').innerHTML = t.agbContent;
+            document.getElementById('reject-btn').innerText = t.btnReject;
+            document.getElementById('cart-title').innerText = t.cartTitle;
+            document.getElementById('checkout-btn').innerText = t.checkoutBtn;
+            document.getElementById('total-label').innerText = t.total;
+            document.getElementById('checkout-title').innerText = t.checkoutTitle;
+            document.getElementById('name-label').innerText = t.nameLabel;
+            document.getElementById('card-label').innerText = t.cardLabel;
+            document.getElementById('pay-button').innerText = t.payBtn;
+            document.getElementById('success-title').innerText = t.successTitle;
+            document.getElementById('back-btn').innerText = t.backBtn;
+            document.getElementById('pp-title').innerText = t.ppTitle;
+            document.getElementById('pp-login-btn').innerText = t.ppLogin;
+            document.getElementById('pp-cancel-btn').innerText = t.ppCancel;
+            document.getElementById('pp-verify-title').innerText = t.ppVerify;
+            document.getElementById('pp-confirm-btn').innerText = t.ppConfirm;
+            
+            document.getElementById('customer-name').placeholder = t.placeholderName;
+            document.getElementById('card-input-placeholder').placeholder = t.placeholderCard;
+        }
+
         function startAGBTimer() {
             let timeLeft = 5;
             const btn = document.getElementById('accept-btn');
+            const t = translations[currentLang];
             
-            // Sicherstellen, dass er beim Start WIRKLICH deaktiviert ist
             btn.disabled = true;
-            btn.innerText = `Lesen... (${timeLeft})`;
+            btn.innerText = `${t.btnAccept} (${timeLeft})`;
 
             const timer = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    btn.innerText = "Ich stimme zu";
+                    btn.innerText = t.btnAccepted;
                     btn.disabled = false;
                 } else {
-                    btn.innerText = `Lesen... (${timeLeft})`;
+                    btn.innerText = `${t.btnAccept} (${timeLeft})`;
                 }
             }, 1000);
         }
 
         function acceptAGB() {
-            // Nur ausführen, wenn nicht disabled (zusätzliche Sicherheit)
             if (document.getElementById('accept-btn').disabled) return;
-            
             document.getElementById('agb-overlay').classList.add('hidden');
             document.body.style.overflow = 'auto';
         }
 
         function rejectAGB() {
             window.close();
-            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:serif;font-size:2rem;text-align:center;padding:2rem;'>Zutritt verweigert.<br>Verlasse diesen Ort.</div>";
+            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:serif;font-size:2rem;text-align:center;padding:2rem;'>Access Denied.<br>Leave this place.</div>";
         }
 
         function changeFavicon(src) {
@@ -313,13 +450,12 @@
                 `).join('');
             }
             updateCart();
-            startAGBTimer();
         }
 
         function addToCart(id) {
             cart.push(products.find(p => p.id === id));
             updateCart();
-            showToast("Beute gesichert.");
+            showToast(translations[currentLang].toastAdd);
         }
 
         function updateCart() {
@@ -337,7 +473,7 @@
                             <span class="text-zinc-500">${i.price.toFixed(2)}€</span>
                         </div>
                         <button onclick="removeFromCart(${index})" class="text-red-900 hover:text-red-500"><i class="fas fa-trash"></i></button>
-                    </div>`).join('') : '<p class="italic text-zinc-600 text-center py-10">Leer wie ein Grab.</p>';
+                    </div>`).join('') : `<p class="italic text-zinc-600 text-center py-10">${translations[currentLang].emptyCart}</p>`;
             }
         }
 
@@ -353,8 +489,6 @@
                 document.getElementById('checkout-modal').classList.remove('hidden'); 
                 document.getElementById('payment-success').classList.add('hidden'); 
                 document.getElementById('checkout-container').classList.remove('hidden'); 
-            } else {
-                showToast("Der Korb ist leer.");
             }
         }
 
@@ -406,7 +540,7 @@
                 closePaypal(); 
                 finalizeOrder(); 
             } else { 
-                showToast("Code falsch."); 
+                showToast("Code error."); 
             } 
         }
 
@@ -420,7 +554,7 @@
                 items: cart.map(i => i.name) 
             });
             if (success) {
-                document.getElementById('final-price-msg').innerText = `Deine ${totalSum} € Zahlung war ein Erfolg.`;
+                document.getElementById('final-price-msg').innerText = `${totalSum} € - Done.`;
                 document.getElementById('checkout-container').classList.add('hidden');
                 document.getElementById('payment-success').classList.remove('hidden');
             }
