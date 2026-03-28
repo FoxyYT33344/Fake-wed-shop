@@ -96,11 +96,19 @@
         }
 
         .btn-gothic:hover:not(:disabled) { background: #700606; letter-spacing: 2px; }
-        .btn-gothic:disabled { background: #222; color: #555; cursor: not-allowed; border-color: #333; }
+        
+        /* Strengere Deaktivierung */
+        .btn-gothic:disabled { 
+            background: #1a1a1a !important; 
+            color: #444 !important; 
+            cursor: not-allowed !important; 
+            border: 1px solid #333 !important;
+            opacity: 0.6;
+        }
 
         #agb-overlay {
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(0,0,0,0.98);
+            backdrop-filter: blur(15px);
         }
 
         .pulse-red { animation: pulse-red 2s infinite; }
@@ -111,7 +119,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- AGB PORTAL (Eintritt mit Lese-Countdown) -->
+    <!-- AGB PORTAL -->
     <div id="agb-overlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
         <div class="max-w-2xl w-full bg-zinc-900 border-2 border-red-900 p-8 rounded-lg shadow-2xl text-center space-y-6">
             <i class="fas fa-scroll text-5xl text-red-800 mb-2"></i>
@@ -122,6 +130,7 @@
                 <p>Mit dem Betreten der Boutique bestätigst du, dass du dies verstanden hast und bereit bist, dich auf dieses schaurige Rollenspiel einzulassen.</p>
             </div>
             <div class="flex flex-col md:flex-row gap-4 pt-6">
+                <!-- Button ist standardmäßig per HTML disabled -->
                 <button id="accept-btn" onclick="acceptAGB()" disabled class="flex-1 py-4 btn-gothic font-bold uppercase tracking-widest rounded transition-all">
                     Lesen... (5)
                 </button>
@@ -245,11 +254,15 @@
             { id: 10, name: "Schwarze Witwen-Schleier", price: 19.99, icon: "user-secret", desc: "Perfekt für traurige Anlässe." }
         ];
 
-        // AGB Countdown Logik
+        // AGB Countdown Logik - Robust fixiert
         function startAGBTimer() {
             let timeLeft = 5;
             const btn = document.getElementById('accept-btn');
             
+            // Sicherstellen, dass er beim Start WIRKLICH deaktiviert ist
+            btn.disabled = true;
+            btn.innerText = `Lesen... (${timeLeft})`;
+
             const timer = setInterval(() => {
                 timeLeft--;
                 if (timeLeft <= 0) {
@@ -263,6 +276,9 @@
         }
 
         function acceptAGB() {
+            // Nur ausführen, wenn nicht disabled (zusätzliche Sicherheit)
+            if (document.getElementById('accept-btn').disabled) return;
+            
             document.getElementById('agb-overlay').classList.add('hidden');
             document.body.style.overflow = 'auto';
         }
