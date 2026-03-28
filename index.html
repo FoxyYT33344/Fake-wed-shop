@@ -4,19 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title id="page-title">Nevermore Boutique | Mystery & Darkness</title>
-    <!-- Dein neues Shop-Icon als Standard -->
+    <!-- Dein Shop-Icon -->
     <link id="favicon" rel="icon" type="image/x-icon" href="shop.ico">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
-    <!-- Firebase SDKs mit Fallback-Logik -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Initialisierung nur wenn Config vorhanden ist (verhindert Absturz im lokalen Browser)
         let db = null;
         let auth = null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'nevermore-boutique';
@@ -36,43 +34,21 @@
                             await signInAnonymously(auth);
                         }
                     } catch (error) {
-                        console.warn("Auth nicht möglich (evtl. lokale Datei)");
+                        console.warn("Auth nicht möglich");
                     }
                 };
-
-                onAuthStateChanged(auth, (u) => {
-                    window.user = u;
-                    const statusEl = document.getElementById('user-status');
-                    if (u && statusEl) {
-                        statusEl.innerText = "Status: Gast der Finsternis";
-                    }
-                });
-
+                onAuthStateChanged(auth, (u) => { window.user = u; });
                 initAuth();
             }
-        } catch (e) {
-            console.warn("Firebase konnte nicht geladen werden - Shop läuft im Offline-Modus.");
-        }
+        } catch (e) { console.warn("Offline-Modus aktiv."); }
 
         window.saveOrderToCloud = async (orderData) => {
-            // Wenn keine Datenbank da ist, simulieren wir einen Erfolg für die lokale Anzeige
-            if (!db || !window.user) {
-                console.log("Lokale Speicherung (Simulation):", orderData);
-                return true; 
-            }
+            if (!db || !window.user) return true; 
             try {
                 const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'bess_json');
-                await addDoc(ordersRef, {
-                    ...orderData,
-                    userId: window.user.uid,
-                    timestamp: serverTimestamp(),
-                    status: 'neu'
-                });
+                await addDoc(ordersRef, { ...orderData, userId: window.user.uid, timestamp: serverTimestamp(), status: 'neu' });
                 return true;
-            } catch (e) {
-                console.error("Fehler beim Archivieren:", e);
-                return false;
-            }
+            } catch (e) { return false; }
         };
     </script>
 
@@ -91,7 +67,7 @@
             background-color: var(--ghoul-black);
             color: var(--ghost-white);
             font-family: 'Crimson Text', serif;
-            overflow-x: hidden;
+            overflow: hidden; /* Verhindert Scrollen bis AGB akzeptiert */
         }
 
         .gothic-title { font-family: 'UnifrakturMaguntia', cursive; }
@@ -105,7 +81,6 @@
         .product-card:hover {
             border-color: var(--blood-red);
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(74, 4, 4, 0.3);
         }
 
         .cart-sidebar {
@@ -122,45 +97,36 @@
 
         .btn-gothic:hover { background: #700606; letter-spacing: 2px; }
 
-        .payment-option {
-            border: 1px solid #333;
-            cursor: pointer;
-            transition: all 0.2s;
+        #agb-overlay {
+            background: rgba(0,0,0,0.95);
+            backdrop-blur: 10px;
         }
 
-        .payment-option.active {
-            border-color: var(--blood-red);
-            background: rgba(74, 4, 4, 0.1);
-        }
+        .pulse-red { animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { opacity: 0.8; } 50% { opacity: 1; text-shadow: 0 0 10px #4a0404; } 100% { opacity: 0.8; } }
 
         #paypal-overlay { background: #ffffff; color: #2c2e2f; font-family: Arial, sans-serif; }
-
-        .payypall-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid var(--payypall-blue);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .pulse-red {
-            animation: pulse-red 2s infinite;
-        }
-
-        @keyframes pulse-red {
-            0% { transform: scale(1); opacity: 0.8; }
-            50% { transform: scale(1.1); opacity: 1; text-shadow: 0 0 20px #4a0404; }
-            100% { transform: scale(1); opacity: 0.8; }
-        }
-
-        input { color: black; background: white; }
         .dark-input { color: white !important; background: #222 !important; border: 1px solid #444 !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
+
+    <!-- AGB PORTAL (Eintritt) -->
+    <div id="agb-overlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
+        <div class="max-w-2xl w-full bg-zinc-900 border-2 border-red-900 p-8 rounded-lg shadow-2xl text-center space-y-6">
+            <i class="fas fa-scroll text-5xl text-red-800 mb-2"></i>
+            <h2 class="text-4xl gothic-title text-white">Haftungsausschluss der Ahnen</h2>
+            <div class="text-zinc-400 space-y-4 text-lg italic">
+                <p>Halt ein, Wanderer!</p>
+                <p>Diese Website dient ausschließlich **Spaß- und Simulationszwecken**. Nichts auf dieser Seite – weder die Waren, noch die Transaktionen – ist echt oder rechtsverbindlich.</p>
+                <p>Mit dem Betreten der Boutique bestätigst du, dass du dies verstanden hast und bereit bist, dich auf dieses schaurige Rollenspiel einzulassen.</p>
+            </div>
+            <div class="flex flex-col md:flex-row gap-4 pt-6">
+                <button onclick="acceptAGB()" class="flex-1 py-4 bg-red-900 hover:bg-red-700 text-white font-bold uppercase tracking-widest rounded transition-all">Ich stimme zu</button>
+                <button onclick="rejectAGB()" class="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase tracking-widest rounded transition-all">Ablehnen (Gehen)</button>
+            </div>
+        </div>
+    </div>
 
     <nav class="p-6 border-b border-zinc-800 flex justify-between items-center sticky top-0 bg-black/90 backdrop-blur-md z-40">
         <div>
@@ -180,10 +146,8 @@
     </main>
 
     <footer class="p-10 border-t border-zinc-800 text-center text-zinc-500 text-sm">
-        <div class="mb-4 text-red-900">
-            <i class="fas fa-skull text-2xl opacity-40"></i>
-        </div>
-        <p>&copy; 1845 - 2024 Nevermore Boutique. Alle Rechte bei den Ahnen.</p>
+        <div class="mb-4 text-red-900"><i class="fas fa-skull text-2xl opacity-40"></i></div>
+        <p>&copy; 2020-2026 Fox Studios. Alle Rechte bei den Entwicklern.</p>
     </footer>
 
     <!-- Warenkorb Sidebar -->
@@ -203,16 +167,13 @@
     <div id="checkout-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/90" onclick="closeCheckout()"></div>
         <div class="relative bg-zinc-900 border-2 border-red-900 w-full max-w-lg p-8 rounded-lg shadow-2xl overflow-y-auto max-h-[90vh]">
-            
             <div id="checkout-container">
                 <h2 class="text-3xl gothic-title mb-6 text-center text-red-700">Letztes Geleit</h2>
-                
                 <form id="checkout-form" onsubmit="handlePaymentSubmit(event)" class="space-y-6">
                     <div class="space-y-2">
                         <label class="text-xs uppercase tracking-widest text-zinc-500">Dein Name</label>
                         <input type="text" id="customer-name" placeholder="Name der Seele" required class="w-full p-3 rounded dark-input">
                     </div>
-
                     <div class="grid grid-cols-2 gap-4 text-white">
                         <div id="opt-card" onclick="selectPayment('card')" class="payment-option p-4 rounded text-center active">
                             <i class="fas fa-credit-card mb-2 block"></i><span class="text-xs">KARTE</span>
@@ -221,30 +182,17 @@
                             <i class="fab fa-paypal mb-2 block text-blue-500"></i><span class="text-xs">PAYY PALL</span>
                         </div>
                     </div>
-
                     <div id="card-form" class="space-y-4">
-                        <input type="text" placeholder="Kartennummer (16 Stellen)" maxlength="16" class="w-full p-3 rounded dark-input">
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="text" placeholder="MM/YY" maxlength="5" class="p-3 rounded dark-input">
-                            <input type="text" placeholder="CVV" maxlength="3" class="p-3 rounded dark-input">
-                        </div>
+                        <input type="text" placeholder="Kartennummer" maxlength="16" class="w-full p-3 rounded dark-input">
                     </div>
-
                     <button type="submit" id="pay-button" class="w-full py-4 btn-gothic rounded font-bold uppercase tracking-widest text-white">Besiegeln</button>
                 </form>
             </div>
-
-            <!-- Bestätigung mit Totenkopf -->
             <div id="payment-success" class="hidden text-center py-10 space-y-6">
-                <div class="pulse-red">
-                    <i class="fas fa-skull text-8xl text-red-800"></i>
-                </div>
+                <div class="pulse-red"><i class="fas fa-skull text-8xl text-red-800"></i></div>
                 <h3 class="text-4xl gothic-title text-white">Es ist vollbracht.</h3>
-                <p class="text-xl text-red-500 font-bold" id="final-price-msg">Deine 0.00 € Zahlung war ein Erfolg</p>
-                <p class="text-zinc-400 italic">Deine Bestellung wurde in die Finsternis übertragen (bess.json).</p>
-                <div class="pt-6">
-                    <button onclick="closeCheckout(true)" class="px-10 py-3 bg-red-900/20 border border-red-900 text-red-500 hover:bg-red-900 hover:text-white transition-all rounded uppercase text-xs tracking-[0.3em]">Zurück in den Schatten</button>
-                </div>
+                <p class="text-xl text-red-500 font-bold" id="final-price-msg"></p>
+                <button onclick="closeCheckout(true)" class="px-10 py-3 bg-red-900/20 border border-red-900 text-red-500 hover:bg-red-900 hover:text-white transition-all rounded uppercase text-xs tracking-widest">Zurück</button>
             </div>
         </div>
     </div>
@@ -252,36 +200,22 @@
     <!-- Payy Pall Overlay -->
     <div id="paypal-overlay" class="fixed inset-0 z-[200] hidden flex flex-col items-center justify-center bg-black/50">
         <div class="bg-white w-full h-full md:h-auto md:max-w-xl md:rounded-xl shadow-2xl relative p-8 text-black">
-             <div id="pp-code-box" class="absolute top-4 right-4 bg-gray-100 p-2 rounded hidden">
-                <p class="text-[9px] text-gray-400 uppercase">Sicherheits-Code:</p>
-                <p id="generated-code" class="text-lg font-mono font-bold text-blue-900">000000</p>
-            </div>
-            
-            <div id="pp-login" class="space-y-6 py-10">
-                <div class="flex items-center gap-1 mb-6">
+            <div id="pp-login" class="space-y-6 py-10 text-center">
+                <div class="flex items-center justify-center gap-1 mb-6">
                     <i class="fab fa-paypal text-blue-800 text-3xl"></i>
                     <span class="text-2xl font-bold italic text-blue-900">Payy Pall</span>
                 </div>
                 <h2 class="text-xl font-light">Mit Payy Pall bezahlen</h2>
-                <div class="space-y-4">
-                    <input type="text" placeholder="E-Mail oder Handy" class="w-full p-4 border rounded">
-                    <input type="password" placeholder="Passwort" class="w-full p-4 border rounded">
-                </div>
+                <input type="text" placeholder="E-Mail" class="w-full p-4 border rounded">
+                <input type="password" placeholder="Passwort" class="w-full p-4 border rounded">
                 <button onclick="startPPVerify()" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold">Einloggen</button>
                 <button onclick="closePaypal()" class="w-full text-xs text-gray-400 mt-2">Abbrechen</button>
             </div>
-
             <div id="pp-verify" class="hidden space-y-6 text-center py-10">
-                <h2 class="text-xl font-bold">Identität bestätigen</h2>
-                <p class="text-sm text-gray-500">Geben Sie den Code ein, den Sie erhalten haben.</p>
-                <input type="text" id="pp-input" maxlength="6" class="w-full p-4 text-center text-3xl tracking-widest border rounded">
+                <h2 class="text-xl font-bold">Code eingeben</h2>
+                <p id="generated-code" class="text-2xl font-mono text-blue-800">123456</p>
+                <input type="text" id="pp-input" maxlength="6" class="w-full p-4 text-center text-3xl border rounded">
                 <button onclick="checkPPCode()" class="w-full bg-blue-600 text-white py-3 rounded-full font-bold">Bestätigen</button>
-            </div>
-
-            <div id="pp-loader" class="hidden flex flex-col items-center py-20">
-                <div class="payypall-spinner"></div>
-                <p class="mt-4 text-blue-900 font-bold">Zahlung wird autorisiert...</p>
-                <p class="text-xs text-gray-400">Summe: <span id="pp-amount" class="text-black font-bold">0.00 €</span></p>
             </div>
         </div>
     </div>
@@ -290,9 +224,12 @@
 
     <script>
         const originalTitle = "Nevermore Boutique | Mystery & Darkness";
-        const originalIcon = "shop.ico"; 
-        const paypalIcon = "payy.ico"; 
-        
+        const originalIcon = "shop.ico";
+        const paypalIcon = "payy.ico";
+        let cart = [];
+        let method = 'card';
+        let ppCode = "";
+
         const products = [
             { id: 1, name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits." },
             { id: 2, name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter." },
@@ -300,18 +237,19 @@
             { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie." }
         ];
 
-        let cart = [];
-        let method = 'card';
-        let ppCode = "";
+        function acceptAGB() {
+            document.getElementById('agb-overlay').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function rejectAGB() {
+            window.close();
+            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-center;font-family:serif;font-size:2rem;'>Zutritt verweigert. Verlasse diesen Ort.</div>";
+        }
 
         function changeFavicon(src) {
             let link = document.getElementById('favicon');
-            if (!link) {
-                link = document.createElement('link');
-                link.id = 'favicon'; link.rel = 'icon';
-                document.head.appendChild(link);
-            }
-            link.href = src;
+            if (link) link.href = src;
         }
 
         function init() {
@@ -337,121 +275,41 @@
         }
 
         function addToCart(id) {
-            const item = products.find(p => p.id === id);
-            cart.push(item);
+            cart.push(products.find(p => p.id === id));
             updateCart();
-            showToast(`${item.name} gesichert.`);
+            showToast("Beute gesichert.");
         }
 
         function updateCart() {
             const count = document.getElementById('cart-count');
             const total = document.getElementById('cart-total');
-            const ppTotal = document.getElementById('pp-amount');
-            const container = document.getElementById('cart-items');
             if (count) count.innerText = cart.length;
             let sum = cart.reduce((s, i) => s + i.price, 0);
-            if (container) {
-                container.innerHTML = cart.length ? cart.map(i => `<div class="flex justify-between text-xs bg-zinc-800/20 p-2 rounded"><span>${i.name}</span><span>${i.price.toFixed(2)}€</span></div>`).join('') : '<p class="italic text-zinc-600">Leer...</p>';
-            }
             if (total) total.innerText = sum.toFixed(2) + " €";
-            if (ppTotal) ppTotal.innerText = sum.toFixed(2) + " €";
+            const container = document.getElementById('cart-items');
+            if (container) {
+                container.innerHTML = cart.length ? cart.map(i => `<div class="flex justify-between text-xs bg-zinc-800/20 p-2 rounded"><span>${i.name}</span><span>${i.price.toFixed(2)}€</span></div>`).join('') : '<p class="italic text-zinc-600 text-center">Leer wie ein Grab.</p>';
+            }
         }
 
         function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('translate-x-full'); }
-        
-        function openCheckout() { 
-            if (cart.length === 0) {
-                showToast("Dein Wagen ist leer wie ein Grab.");
-                return;
-            }
-            document.getElementById('checkout-modal').classList.remove('hidden'); 
-            document.getElementById('checkout-container').classList.remove('hidden');
-            document.getElementById('payment-success').classList.add('hidden');
-        }
-
-        function closeCheckout(clear = false) {
-            document.getElementById('checkout-modal').classList.add('hidden');
-            if (clear) { 
-                cart = []; 
-                updateCart(); 
-                if (!document.getElementById('cart-sidebar').classList.contains('translate-x-full')) toggleCart();
-                document.getElementById('checkout-form').reset();
-            }
-        }
-
-        function selectPayment(m) {
-            method = m;
-            document.getElementById('opt-card').classList.toggle('active', m === 'card');
-            document.getElementById('opt-paypal').classList.toggle('active', m === 'paypal');
-            document.getElementById('card-form').classList.toggle('hidden', m !== 'card');
-        }
-
-        function handlePaymentSubmit(e) {
-            e.preventDefault();
-            if (method === 'paypal') {
-                document.title = "Bei Payy Pall anmelden";
-                changeFavicon(paypalIcon);
-                document.getElementById('pp-login').classList.remove('hidden');
-                document.getElementById('paypal-overlay').classList.remove('hidden');
-            } else {
-                finalizeOrder();
-            }
-        }
-
-        function closePaypal() {
-            document.getElementById('paypal-overlay').classList.add('hidden');
-            document.title = originalTitle;
-            changeFavicon(originalIcon);
-        }
-
-        function startPPVerify() {
-            ppCode = Math.floor(100000 + Math.random() * 900000).toString();
-            document.getElementById('generated-code').innerText = ppCode;
-            document.getElementById('pp-login').classList.add('hidden');
-            document.getElementById('pp-verify').classList.remove('hidden');
-            document.getElementById('pp-code-box').classList.remove('hidden');
-        }
-
-        function checkPPCode() {
-            if (document.getElementById('pp-input').value === ppCode) {
-                document.getElementById('pp-verify').classList.add('hidden');
-                document.getElementById('pp-code-box').classList.add('hidden');
-                document.getElementById('pp-loader').classList.remove('hidden');
-                setTimeout(() => {
-                    closePaypal();
-                    finalizeOrder();
-                }, 2000);
-            } else {
-                showToast("Code falsch.");
-            }
-        }
+        function openCheckout() { if(cart.length > 0) { document.getElementById('checkout-modal').classList.remove('hidden'); document.getElementById('payment-success').classList.add('hidden'); document.getElementById('checkout-container').classList.remove('hidden'); } }
+        function closeCheckout(clear = false) { document.getElementById('checkout-modal').classList.add('hidden'); if(clear){ cart = []; updateCart(); if(!document.getElementById('cart-sidebar').classList.contains('translate-x-full')) toggleCart(); } }
+        function selectPayment(m) { method = m; document.getElementById('opt-card').classList.toggle('active', m === 'card'); document.getElementById('opt-paypal').classList.toggle('active', m === 'paypal'); document.getElementById('card-form').classList.toggle('hidden', m !== 'card'); }
+        function handlePaymentSubmit(e) { e.preventDefault(); if(method === 'paypal') { document.title = "Payy Pall Login"; changeFavicon(paypalIcon); document.getElementById('paypal-overlay').classList.remove('hidden'); document.getElementById('pp-login').classList.remove('hidden'); } else { finalizeOrder(); } }
+        function closePaypal() { document.getElementById('paypal-overlay').classList.add('hidden'); document.title = originalTitle; changeFavicon(originalIcon); }
+        function startPPVerify() { ppCode = Math.floor(100000 + Math.random() * 900000).toString(); document.getElementById('generated-code').innerText = ppCode; document.getElementById('pp-login').classList.add('hidden'); document.getElementById('pp-verify').classList.remove('hidden'); }
+        function checkPPCode() { if(document.getElementById('pp-input').value === ppCode) { closePaypal(); finalizeOrder(); } else { showToast("Code falsch."); } }
 
         async function finalizeOrder() {
-            const customer = document.getElementById('customer-name').value || "Seelenlos";
-            const btn = document.getElementById('pay-button');
             const totalSum = cart.reduce((s, i) => s + i.price, 0).toFixed(2);
-            
-            if (btn) btn.disabled = true;
-
-            // Wiederherstellung der Shop-Identität
             document.title = originalTitle;
             changeFavicon(originalIcon);
-
-            // Cloud-Speicherung (mit Fallback für lokale Nutzung)
-            const success = await window.saveOrderToCloud({ 
-                customer, 
-                items: cart.map(i => i.name), 
-                total: totalSum,
-                method: method
-            });
-
+            const success = await window.saveOrderToCloud({ customer: document.getElementById('customer-name').value, total: totalSum, items: cart.map(i => i.name) });
             if (success) {
-                document.getElementById('final-price-msg').innerText = `Deine ${totalSum} € Zahlung war ein Erfolg`;
+                document.getElementById('final-price-msg').innerText = `Deine ${totalSum} € Zahlung war ein Erfolg.`;
                 document.getElementById('checkout-container').classList.add('hidden');
                 document.getElementById('payment-success').classList.remove('hidden');
-            } else {
-                showToast("Ein Fehler ist aufgetreten.");
-                if (btn) btn.disabled = false;
             }
         }
 
