@@ -39,15 +39,6 @@
                 initAuth();
             }
         } catch (e) { console.warn("Offline-Modus aktiv."); }
-
-        window.saveOrderToCloud = async (orderData) => {
-            if (!db || !window.user) return true; 
-            try {
-                const ordersRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders');
-                await addDoc(ordersRef, { ...orderData, userId: window.user.uid, timestamp: serverTimestamp(), status: 'neu' });
-                return true;
-            } catch (e) { return false; }
-        };
     </script>
 
     <style>
@@ -95,16 +86,9 @@
 
         .btn-gothic:hover:not(:disabled) { background: #700606; letter-spacing: 2px; }
         
-        .btn-gothic:disabled { 
-            background: #1a1a1a !important; 
-            color: #444 !important; 
-            cursor: not-allowed !important; 
-            opacity: 0.6;
-        }
-
         .portal-overlay {
-            background: rgba(0,0,0,0.99);
-            backdrop-filter: blur(20px);
+            background: rgba(0,0,0,1);
+            z-index: 5000;
         }
 
         .classic-badge {
@@ -129,6 +113,19 @@
 
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        .countdown-text {
+            font-size: 8rem;
+            color: var(--blood-red);
+            text-shadow: 0 0 20px rgba(74, 4, 4, 0.8);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #0a0a0a; }
@@ -143,9 +140,11 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- LANGUAGE PORTAL -->
-    <div id="lang-portal" class="fixed inset-0 z-[2000] portal-overlay flex items-center justify-center p-6 text-white">
-        <div class="max-w-4xl w-full text-center space-y-12">
+    <!-- RITUAL OVERLAY (Language -> Button -> Countdown) -->
+    <div id="ritual-overlay" class="fixed inset-0 portal-overlay flex items-center justify-center p-6 text-white text-center">
+        
+        <!-- Step 1: Language -->
+        <div id="step-language" class="max-w-4xl w-full space-y-12">
             <h2 class="text-5xl gothic-title">Wähle deinen Ursprung</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div onclick="selectLanguage('de')" class="bg-zinc-900 p-8 rounded border border-zinc-800 hover:border-red-900 cursor-pointer transition-all">
@@ -159,9 +158,25 @@
                 </div>
             </div>
         </div>
+
+        <!-- Step 2: Ritual Button -->
+        <div id="step-initiation" class="hidden max-w-xl w-full space-y-8">
+            <h2 id="initiation-title" class="text-4xl gothic-title text-zinc-400">Das Siegel ist bereit</h2>
+            <p id="initiation-desc" class="text-zinc-500 italic">Bist du bereit, in die Tiefe von 5 Milliarden Seelen zu blicken?</p>
+            <button onclick="startCountdown()" class="px-12 py-4 border border-red-900 text-red-700 hover:bg-red-900 hover:text-white transition-all uppercase tracking-[0.4em] font-bold text-sm">
+                Das Siegel brechen
+            </button>
+        </div>
+
+        <!-- Step 3: Countdown -->
+        <div id="step-countdown" class="hidden flex flex-col items-center justify-center">
+            <p id="countdown-val" class="countdown-text gothic-title">5</p>
+            <p id="ritual-msg" class="uppercase tracking-widest text-zinc-600 mt-4">Beschwörung läuft...</p>
+        </div>
+
     </div>
 
-    <!-- MAIN NAV -->
+    <!-- MAIN NAV (Hidden initially) -->
     <nav class="p-4 border-b border-zinc-800 sticky top-0 bg-black/95 backdrop-blur-md z-40">
         <div class="container mx-auto flex justify-between items-center">
             <div>
@@ -184,7 +199,6 @@
             <!-- Items werden hier geladen -->
         </div>
         
-        <!-- Loading Trigger -->
         <div id="loading-trigger" class="flex justify-center py-12">
             <div class="loading-spinner"></div>
         </div>
@@ -206,20 +220,19 @@
         <div class="p-6 border-t border-zinc-800 bg-zinc-900">
             <div class="flex justify-between mb-4"><span class="text-zinc-500">Gesamt:</span><span id="cart-total" class="font-bold">0.00 €</span></div>
             <button class="w-full py-3 btn-gothic uppercase text-xs font-bold tracking-widest rounded mb-2" onclick="toggleModal('agb-modal')">Besiegeln</button>
-            <p class="text-[8px] text-zinc-500 text-center">Mit Klick auf "Besiegeln" akzeptierst du den ewigen Pakt.</p>
         </div>
     </div>
 
     <!-- AGB MODAL -->
-    <div id="agb-modal" class="fixed inset-0 z-[3000] modal hidden flex items-center justify-center p-4">
+    <div id="agb-modal" class="fixed inset-0 z-[6000] modal hidden flex items-center justify-center p-4">
         <div class="bg-zinc-900 border border-red-900 max-w-2xl w-full max-h-[80vh] overflow-y-auto p-8 rounded shadow-2xl">
             <h2 class="text-3xl gothic-title text-red-800 mb-6">Pakt der Finsternis (AGB)</h2>
-            <div class="space-y-4 text-sm text-zinc-300 leading-relaxed font-serif">
+            <div class="space-y-4 text-sm text-zinc-300 leading-relaxed font-serif text-left">
                 <p><strong>§1 Geltungsbereich:</strong> Dieser Pakt gilt zwischen der Nevermore Boutique und jeder Seele, die den digitalen Schwellenwert überschreitet.</p>
-                <p><strong>§2 Rückgaberecht:</strong> Es gibt keine Rückkehr. Was einmal erworben wurde, gehört dir bis zum Ende der Zeit (und darüber hinaus). Wir akzeptieren keine Reklamationen von Geistern.</p>
-                <p><strong>§3 Bezahlung:</strong> Wir akzeptieren Golddublonen, Kryptowährungen des Abyss und – in Ausnahmefällen – PayPal mit Käuferschutz (obwohl uns der Schutz von Seelen lieber wäre).</p>
-                <p><strong>§4 Haftungsausschluss:</strong> Wir haften nicht für Fluch-Induzierte Nebenwirkungen, plötzliche Kälteerscheinungen oder das Erscheinen von Raben in Ihrem Schlafzimmer.</p>
-                <p><strong>§5 Geheimhaltung:</strong> Du schweigst über die Herkunft dieser Relikte. Ein Bruch des Schweigens führt zu einem lebenslangen Besuch von Onkel Fester.</p>
+                <p><strong>§2 Rückgaberecht:</strong> Es gibt keine Rückkehr. Was einmal erworben wurde, gehört dir bis zum Ende der Zeit.</p>
+                <p><strong>§3 Bezahlung:</strong> Wir akzeptieren Golddublonen und Kryptowährungen des Abyss.</p>
+                <p><strong>§4 Haftungsausschluss:</strong> Wir haften nicht für Fluch-Induzierte Nebenwirkungen.</p>
+                <p><strong>§5 Geheimhaltung:</strong> Du schweigst über die Herkunft dieser Relikte.</p>
             </div>
             <button onclick="toggleModal('agb-modal')" class="mt-8 w-full py-3 border border-zinc-700 hover:border-red-900 transition-all uppercase text-[10px] tracking-widest">Ich akzeptiere mein Schicksal</button>
         </div>
@@ -227,74 +240,69 @@
 
     <script>
         const translations = {
-            de: { classic: "Klassiker", added: "Beute gesichert" },
-            en: { classic: "Classic", added: "Loot secured" },
-            fr: { classic: "Classique", added: "Butin sécurisé" }
+            de: { initTitle: "Das Siegel ist bereit", initDesc: "Bist du bereit, in die Tiefe von 5 Milliarden Seelen zu blicken?", btn: "Das Siegel brechen", msg: "Beschwörung läuft...", classic: "Klassiker" },
+            en: { initTitle: "The Seal is Ready", initDesc: "Are you ready to gaze into the depths of 5 billion souls?", btn: "Break the Seal", msg: "Summoning in progress...", classic: "Classic" },
+            fr: { initTitle: "Le Sceau est Prêt", initDesc: "Es-tu prêt à contempler les profondeurs de 5 milliards d'âmes ?", btn: "Briser le Sceau", msg: "Vocation en cours...", classic: "Classique" }
         };
 
         const icons = ["skull", "ghost", "moon", "spider", "eye", "flask", "bolt", "gem", "key", "vial", "mask", "scroll", "hat-wizard"];
-        
-        const adjectives = {
-            de: ["Verflucht", "Düster", "Ewig", "Blutig", "Kalt", "Tödlich", "Uralt", "Schattig", "Obsidian", "Neblig", "Grabes", "Nacht"],
-            en: ["Cursed", "Dark", "Eternal", "Bloody", "Cold", "Deadly", "Ancient", "Shadowy", "Obsidian", "Misty", "Grave", "Night"],
-            fr: ["Maudit", "Sombre", "Éternel", "Sanglant", "Froid", "Mortel", "Ancien", "Ténébreux", "Obsidienne", "Brumeux", "Tombal", "Nocturne"]
-        };
-
-        const nouns = {
-            de: ["Dolch", "Kelch", "Ring", "Kerze", "Spiegel", "Foliant", "Amulett", "Sarg", "Rabe", "Geist", "Schleier", "Maske", "Urne", "Gift"],
-            en: ["Dagger", "Chalice", "Ring", "Candle", "Mirror", "Tome", "Amulet", "Coffin", "Raven", "Ghost", "Veil", "Mask", "Urn", "Poison"],
-            fr: ["Dague", "Calice", "Bague", "Bougie", "Miroir", "Tome", "Amulette", "Cercueil", "Corbeau", "Fantôme", "Voile", "Masque", "Urne", "Poison"]
-        };
-
-        const classicItems = [
-            { name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits." },
-            { name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter." },
-            { name: "Schwarzer Regenschirm", price: 24.50, icon: "umbrella", desc: "Hält die Sonne fern." },
-            { name: "Onkel Festers Birne", price: 19.99, icon: "lightbulb", desc: "Leuchtet bei Berührung." },
-            { name: "Morticias Obsidian-Vase", price: 55.00, icon: "wine-glass", desc: "Für geköpfte Rosen." },
-            { name: "Grandmamas Kessel", price: 210.00, icon: "bucket", desc: "Kocht fast alles." },
-            { name: "Lurchs Glocke", price: 45.00, icon: "bell", desc: "Sie haben geläutet?" },
-            { name: "Gomez' Fechtdegen", price: 189.00, icon: "sword", desc: "Vorsicht, er ist scharf." },
-            { name: "Pugsleys Dynamit", price: 33.33, icon: "bomb", desc: "Pädagogisch wertvoll." },
-            { name: "Wednesday's Gift", price: 12.00, icon: "vial", desc: "Nur für Enid." }
-        ];
+        const adjectives = { de: ["Verflucht", "Düster", "Ewig", "Blutig", "Kalt"], en: ["Cursed", "Dark", "Eternal", "Bloody", "Cold"], fr: ["Maudit", "Sombre", "Éternel", "Sanglant", "Froid"] };
+        const nouns = { de: ["Dolch", "Kelch", "Ring", "Kerze", "Spiegel"], en: ["Dagger", "Chalice", "Ring", "Candle", "Mirror"], fr: ["Dague", "Calice", "Bague", "Bougie", "Miroir"] };
 
         let currentLang = 'de';
         let itemsLoaded = 0;
-        const totalItemsTarget = 5000000000;
-        const chunkSize = 50;
         let cart = [];
         let isLoading = false;
 
         function selectLanguage(lang) {
             currentLang = lang;
-            document.getElementById('lang-portal').classList.add('hidden');
-            loadNextChunk(); 
+            document.getElementById('step-language').classList.add('hidden');
+            
+            // UI Texte anpassen
+            document.getElementById('initiation-title').innerText = translations[lang].initTitle;
+            document.getElementById('initiation-desc').innerText = translations[lang].initDesc;
+            document.querySelector('#step-initiation button').innerText = translations[lang].btn;
+            document.getElementById('ritual-msg').innerText = translations[lang].msg;
+
+            document.getElementById('step-initiation').classList.remove('hidden');
+        }
+
+        function startCountdown() {
+            document.getElementById('step-initiation').classList.add('hidden');
+            document.getElementById('step-countdown').classList.remove('hidden');
+            
+            let count = 5;
+            const display = document.getElementById('countdown-val');
+            
+            const timer = setInterval(() => {
+                count--;
+                display.innerText = count;
+                if (count <= 0) {
+                    clearInterval(timer);
+                    finishRitual();
+                }
+            }, 1000);
+        }
+
+        function finishRitual() {
+            document.getElementById('ritual-overlay').classList.add('opacity-0');
+            setTimeout(() => {
+                document.getElementById('ritual-overlay').classList.add('hidden');
+                loadNextChunk();
+            }, 500);
         }
 
         function createItem(index) {
-            if (index < 50) {
-                const base = classicItems[index % classicItems.length];
-                return {
-                    id: index,
-                    name: base.name,
-                    price: base.price,
-                    icon: base.icon,
-                    desc: base.desc,
-                    classic: true
-                };
-            } else {
-                const adj = adjectives[currentLang][Math.floor(Math.random() * adjectives[currentLang].length)];
-                const noun = nouns[currentLang][Math.floor(Math.random() * nouns[currentLang].length)];
-                return {
-                    id: index,
-                    name: `${adj} ${noun} #${index}`,
-                    price: parseFloat((Math.random() * 500 + 5).toFixed(2)),
-                    icon: icons[Math.floor(Math.random() * icons.length)],
-                    desc: currentLang === 'de' ? `Ein Fragment der Finsternis.` : `A fragment of darkness.`,
-                    classic: false
-                };
-            }
+            const adj = adjectives[currentLang][Math.floor(Math.random() * adjectives[currentLang].length)];
+            const noun = nouns[currentLang][Math.floor(Math.random() * nouns[currentLang].length)];
+            return {
+                id: index,
+                name: `${adj} ${noun} #${index}`,
+                price: parseFloat((Math.random() * 500 + 5).toFixed(2)),
+                icon: icons[Math.floor(Math.random() * icons.length)],
+                desc: "Fragment der Finsternis.",
+                classic: index < 10
+            };
         }
 
         function renderItem(item) {
@@ -307,10 +315,9 @@
                     <i class="fas fa-${item.icon} text-2xl"></i>
                 </div>
                 <h3 class="text-sm font-bold text-white mb-1">${item.name}</h3>
-                <p class="text-[10px] text-zinc-500 italic mb-4 line-clamp-2">${item.desc}</p>
                 <div class="mt-auto w-full flex justify-between items-center pt-2 border-t border-zinc-800">
                     <span class="text-xs font-bold text-zinc-300">${item.price.toFixed(2)} €</span>
-                    <button onclick="addToCart(${item.id}, '${item.name.replace(/'/g, "\\'")}', ${item.price})" class="w-8 h-8 rounded bg-zinc-800 hover:bg-red-900 text-white transition-colors flex items-center justify-center">
+                    <button onclick="addToCart(${item.id}, '${item.name}', ${item.price})" class="w-8 h-8 rounded bg-zinc-800 hover:bg-red-900 text-white flex items-center justify-center">
                         <i class="fas fa-plus text-[10px]"></i>
                     </button>
                 </div>
@@ -319,24 +326,19 @@
         }
 
         function loadNextChunk() {
-            if (isLoading || itemsLoaded >= totalItemsTarget) return;
+            if (isLoading) return;
             isLoading = true;
             setTimeout(() => {
-                for (let i = 0; i < chunkSize; i++) {
-                    if (itemsLoaded < totalItemsTarget) {
-                        const item = createItem(itemsLoaded);
-                        renderItem(item);
-                        itemsLoaded++;
-                    }
+                for (let i = 0; i < 50; i++) {
+                    renderItem(createItem(itemsLoaded++));
                 }
                 isLoading = false;
-            }, 300);
+            }, 200);
         }
 
         const observer = new IntersectionObserver((entries) => {
-            if (entries[0].isIntersecting) { loadNextChunk(); }
-        }, { threshold: 0.1 });
-
+            if (entries[0].isIntersecting) loadNextChunk();
+        });
         observer.observe(document.getElementById('loading-trigger'));
 
         function addToCart(id, name, price) {
@@ -349,7 +351,7 @@
             const container = document.getElementById('cart-items');
             container.innerHTML = cart.map((i, idx) => `
                 <div class="bg-zinc-900 p-3 rounded border border-zinc-800 flex justify-between items-center text-[10px]">
-                    <div><p class="font-bold text-white">${i.name}</p><p class="text-zinc-500">${i.price.toFixed(2)} €</p></div>
+                    <div><p class="font-bold text-white">${i.name}</p></div>
                     <button onclick="removeFromCart(${idx})" class="text-zinc-600 hover:text-red-600"><i class="fas fa-trash"></i></button>
                 </div>
             `).join('');
@@ -357,18 +359,9 @@
             document.getElementById('cart-total').innerText = total.toFixed(2) + " €";
         }
 
-        function removeFromCart(idx) {
-            cart.splice(idx, 1);
-            updateCart();
-        }
-
-        function toggleCart() {
-            document.getElementById('cart-sidebar').classList.toggle('translate-x-full');
-        }
-
-        function toggleModal(id) {
-            document.getElementById(id).classList.toggle('hidden');
-        }
+        function removeFromCart(idx) { cart.splice(idx, 1); updateCart(); }
+        function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('translate-x-full'); }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
     </script>
 </body>
 </html>
