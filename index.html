@@ -60,14 +60,13 @@
             --raven-grey: #1a1a1a;
             --blood-red: #4a0404;
             --ghost-white: #e0e0e0;
-            --payypall-blue: #0070ba;
         }
 
         body {
             background-color: var(--ghoul-black);
             color: var(--ghost-white);
             font-family: 'Crimson Text', serif;
-            overflow: hidden; /* Verhindert Scrollen bis AGB akzeptiert */
+            overflow: hidden; 
         }
 
         .gothic-title { font-family: 'UnifrakturMaguntia', cursive; }
@@ -81,6 +80,7 @@
         .product-card:hover {
             border-color: var(--blood-red);
             transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(74, 4, 4, 0.3);
         }
 
         .cart-sidebar {
@@ -95,23 +95,23 @@
             transition: all 0.3s;
         }
 
-        .btn-gothic:hover { background: #700606; letter-spacing: 2px; }
+        .btn-gothic:hover:not(:disabled) { background: #700606; letter-spacing: 2px; }
+        .btn-gothic:disabled { background: #222; color: #555; cursor: not-allowed; border-color: #333; }
 
         #agb-overlay {
             background: rgba(0,0,0,0.95);
-            backdrop-blur: 10px;
+            backdrop-filter: blur(10px);
         }
 
         .pulse-red { animation: pulse-red 2s infinite; }
         @keyframes pulse-red { 0% { opacity: 0.8; } 50% { opacity: 1; text-shadow: 0 0 10px #4a0404; } 100% { opacity: 0.8; } }
 
-        #paypal-overlay { background: #ffffff; color: #2c2e2f; font-family: Arial, sans-serif; }
         .dark-input { color: white !important; background: #222 !important; border: 1px solid #444 !important; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- AGB PORTAL (Eintritt) -->
+    <!-- AGB PORTAL (Eintritt mit Countdown) -->
     <div id="agb-overlay" class="fixed inset-0 z-[1000] flex items-center justify-center p-6">
         <div class="max-w-2xl w-full bg-zinc-900 border-2 border-red-900 p-8 rounded-lg shadow-2xl text-center space-y-6">
             <i class="fas fa-scroll text-5xl text-red-800 mb-2"></i>
@@ -122,7 +122,9 @@
                 <p>Mit dem Betreten der Boutique bestätigst du, dass du dies verstanden hast und bereit bist, dich auf dieses schaurige Rollenspiel einzulassen.</p>
             </div>
             <div class="flex flex-col md:flex-row gap-4 pt-6">
-                <button onclick="acceptAGB()" class="flex-1 py-4 bg-red-900 hover:bg-red-700 text-white font-bold uppercase tracking-widest rounded transition-all">Ich stimme zu</button>
+                <button id="accept-btn" onclick="acceptAGB()" disabled class="flex-1 py-4 btn-gothic font-bold uppercase tracking-widest rounded transition-all">
+                    Warten... (5)
+                </button>
                 <button onclick="rejectAGB()" class="flex-1 py-4 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 font-bold uppercase tracking-widest rounded transition-all">Ablehnen (Gehen)</button>
             </div>
         </div>
@@ -175,10 +177,10 @@
                         <input type="text" id="customer-name" placeholder="Name der Seele" required class="w-full p-3 rounded dark-input">
                     </div>
                     <div class="grid grid-cols-2 gap-4 text-white">
-                        <div id="opt-card" onclick="selectPayment('card')" class="payment-option p-4 rounded text-center active">
+                        <div id="opt-card" onclick="selectPayment('card')" class="payment-option p-4 rounded text-center active cursor-pointer border border-zinc-700">
                             <i class="fas fa-credit-card mb-2 block"></i><span class="text-xs">KARTE</span>
                         </div>
-                        <div id="opt-paypal" onclick="selectPayment('paypal')" class="payment-option p-4 rounded text-center">
+                        <div id="opt-paypal" onclick="selectPayment('paypal')" class="payment-option p-4 rounded text-center cursor-pointer border border-zinc-700">
                             <i class="fab fa-paypal mb-2 block text-blue-500"></i><span class="text-xs">PAYY PALL</span>
                         </div>
                     </div>
@@ -234,8 +236,31 @@
             { id: 1, name: "Tödlicher Nachtschatten", price: 13.99, icon: "leaf", desc: "Zierpflanze für das Jenseits." },
             { id: 2, name: "Eiskaltes Händchen", price: 66.60, icon: "hand-paper", desc: "Loyaler Begleiter." },
             { id: 3, name: "Schwarzer Regenschirm", price: 24.50, icon: "umbrella", desc: "Hält die Sonne fern." },
-            { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie." }
+            { id: 4, name: "Raben-Schreibmaschine", price: 120.00, icon: "keyboard", desc: "Für dunkle Poesie." },
+            { id: 5, name: "Verfluchtes Amulett", price: 44.90, icon: "gem", desc: "Zieht Unglück (und Blicke) an." },
+            { id: 6, name: "Sarg-Schlafmaske", price: 15.00, icon: "eye-slash", desc: "Ruhe in Frieden (für 8 Stunden)." },
+            { id: 7, name: "Giftfläschchen-Set", price: 32.00, icon: "flask", desc: "Dekorative Phiolen. Nicht trinken!" },
+            { id: 8, name: "Spinnennetz-Spitze", price: 8.50, icon: "spider", desc: "Feinste Webkunst aus dem Keller." },
+            { id: 9, name: "Geister-Beschwörungsbrett", price: 55.00, icon: "ghost", desc: "Für Gespräche mit den Ahnen." },
+            { id: 10, name: "Schwarze Witwen-Schleier", price: 19.99, icon: "user-secret", desc: "Perfekt für traurige Anlässe." }
         ];
+
+        // AGB Countdown Logik
+        function startAGBTimer() {
+            let timeLeft = 5;
+            const btn = document.getElementById('accept-btn');
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    btn.innerText = "Ich stimme zu";
+                    btn.disabled = false;
+                } else {
+                    btn.innerText = `Warten... (${timeLeft})`;
+                }
+            }, 1000);
+        }
 
         function acceptAGB() {
             document.getElementById('agb-overlay').classList.add('hidden');
@@ -244,7 +269,7 @@
 
         function rejectAGB() {
             window.close();
-            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-center;font-family:serif;font-size:2rem;'>Zutritt verweigert. Verlasse diesen Ort.</div>";
+            document.body.innerHTML = "<div style='background:black;color:red;height:100vh;display:flex;align-items:center;justify-content:center;font-family:serif;font-size:2rem;text-align:center;padding:2rem;'>Zutritt verweigert.<br>Verlasse diesen Ort.</div>";
         }
 
         function changeFavicon(src) {
@@ -272,6 +297,7 @@
                 `).join('');
             }
             updateCart();
+            startAGBTimer(); // Startet den Timer beim Laden
         }
 
         function addToCart(id) {
@@ -288,24 +314,95 @@
             if (total) total.innerText = sum.toFixed(2) + " €";
             const container = document.getElementById('cart-items');
             if (container) {
-                container.innerHTML = cart.length ? cart.map(i => `<div class="flex justify-between text-xs bg-zinc-800/20 p-2 rounded"><span>${i.name}</span><span>${i.price.toFixed(2)}€</span></div>`).join('') : '<p class="italic text-zinc-600 text-center">Leer wie ein Grab.</p>';
+                container.innerHTML = cart.length ? cart.map((i, index) => `
+                    <div class="flex justify-between items-center text-xs bg-zinc-800/40 p-3 rounded border border-zinc-700">
+                        <div class="flex flex-col">
+                            <span class="font-bold">${i.name}</span>
+                            <span class="text-zinc-500">${i.price.toFixed(2)}€</span>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-red-900 hover:text-red-500"><i class="fas fa-trash"></i></button>
+                    </div>`).join('') : '<p class="italic text-zinc-600 text-center py-10">Leer wie ein Grab.</p>';
             }
         }
 
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+
         function toggleCart() { document.getElementById('cart-sidebar').classList.toggle('translate-x-full'); }
-        function openCheckout() { if(cart.length > 0) { document.getElementById('checkout-modal').classList.remove('hidden'); document.getElementById('payment-success').classList.add('hidden'); document.getElementById('checkout-container').classList.remove('hidden'); } }
-        function closeCheckout(clear = false) { document.getElementById('checkout-modal').classList.add('hidden'); if(clear){ cart = []; updateCart(); if(!document.getElementById('cart-sidebar').classList.contains('translate-x-full')) toggleCart(); } }
-        function selectPayment(m) { method = m; document.getElementById('opt-card').classList.toggle('active', m === 'card'); document.getElementById('opt-paypal').classList.toggle('active', m === 'paypal'); document.getElementById('card-form').classList.toggle('hidden', m !== 'card'); }
-        function handlePaymentSubmit(e) { e.preventDefault(); if(method === 'paypal') { document.title = "Payy Pall Login"; changeFavicon(paypalIcon); document.getElementById('paypal-overlay').classList.remove('hidden'); document.getElementById('pp-login').classList.remove('hidden'); } else { finalizeOrder(); } }
-        function closePaypal() { document.getElementById('paypal-overlay').classList.add('hidden'); document.title = originalTitle; changeFavicon(originalIcon); }
-        function startPPVerify() { ppCode = Math.floor(100000 + Math.random() * 900000).toString(); document.getElementById('generated-code').innerText = ppCode; document.getElementById('pp-login').classList.add('hidden'); document.getElementById('pp-verify').classList.remove('hidden'); }
-        function checkPPCode() { if(document.getElementById('pp-input').value === ppCode) { closePaypal(); finalizeOrder(); } else { showToast("Code falsch."); } }
+        
+        function openCheckout() { 
+            if(cart.length > 0) { 
+                document.getElementById('checkout-modal').classList.remove('hidden'); 
+                document.getElementById('payment-success').classList.add('hidden'); 
+                document.getElementById('checkout-container').classList.remove('hidden'); 
+            } else {
+                showToast("Der Korb ist leer.");
+            }
+        }
+
+        function closeCheckout(clear = false) { 
+            document.getElementById('checkout-modal').classList.add('hidden'); 
+            if(clear){ 
+                cart = []; 
+                updateCart(); 
+                if(!document.getElementById('cart-sidebar').classList.contains('translate-x-full')) toggleCart(); 
+            } 
+        }
+
+        function selectPayment(m) { 
+            method = m; 
+            document.getElementById('opt-card').classList.toggle('border-red-900', m === 'card'); 
+            document.getElementById('opt-card').classList.toggle('bg-zinc-800', m === 'card'); 
+            document.getElementById('opt-paypal').classList.toggle('border-blue-900', m === 'paypal'); 
+            document.getElementById('opt-paypal').classList.toggle('bg-zinc-800', m === 'paypal'); 
+            document.getElementById('card-form').classList.toggle('hidden', m !== 'card'); 
+        }
+
+        function handlePaymentSubmit(e) { 
+            e.preventDefault(); 
+            if(method === 'paypal') { 
+                document.title = "Payy Pall Login"; 
+                changeFavicon(paypalIcon); 
+                document.getElementById('paypal-overlay').classList.remove('hidden'); 
+                document.getElementById('pp-login').classList.remove('hidden'); 
+            } else { 
+                finalizeOrder(); 
+            } 
+        }
+
+        function closePaypal() { 
+            document.getElementById('paypal-overlay').classList.add('hidden'); 
+            document.title = originalTitle; 
+            changeFavicon(originalIcon); 
+        }
+
+        function startPPVerify() { 
+            ppCode = Math.floor(100000 + Math.random() * 900000).toString(); 
+            document.getElementById('generated-code').innerText = ppCode; 
+            document.getElementById('pp-login').classList.add('hidden'); 
+            document.getElementById('pp-verify').classList.remove('hidden'); 
+        }
+
+        function checkPPCode() { 
+            if(document.getElementById('pp-input').value === ppCode) { 
+                closePaypal(); 
+                finalizeOrder(); 
+            } else { 
+                showToast("Code falsch."); 
+            } 
+        }
 
         async function finalizeOrder() {
             const totalSum = cart.reduce((s, i) => s + i.price, 0).toFixed(2);
             document.title = originalTitle;
             changeFavicon(originalIcon);
-            const success = await window.saveOrderToCloud({ customer: document.getElementById('customer-name').value, total: totalSum, items: cart.map(i => i.name) });
+            const success = await window.saveOrderToCloud({ 
+                customer: document.getElementById('customer-name').value, 
+                total: totalSum, 
+                items: cart.map(i => i.name) 
+            });
             if (success) {
                 document.getElementById('final-price-msg').innerText = `Deine ${totalSum} € Zahlung war ein Erfolg.`;
                 document.getElementById('checkout-container').classList.add('hidden');
