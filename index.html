@@ -140,10 +140,10 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- RITUAL OVERLAY (Language -> Button -> Countdown) -->
+    <!-- RITUAL OVERLAY -->
     <div id="ritual-overlay" class="fixed inset-0 portal-overlay flex items-center justify-center p-6 text-white text-center">
         
-        <!-- Step 1: Language -->
+        <!-- Schritt 1: Sprachwahl -->
         <div id="step-language" class="max-w-4xl w-full space-y-12">
             <h2 class="text-5xl gothic-title">Wähle deinen Ursprung</h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -159,7 +159,7 @@
             </div>
         </div>
 
-        <!-- Step 2: Ritual Button -->
+        <!-- Schritt 2: Der Knopf "Lesen" / "Brechen" (Nach Sprachwahl) -->
         <div id="step-initiation" class="hidden max-w-xl w-full space-y-8">
             <h2 id="initiation-title" class="text-4xl gothic-title text-zinc-400">Das Siegel ist bereit</h2>
             <p id="initiation-desc" class="text-zinc-500 italic">Bist du bereit, in die Tiefe von 5 Milliarden Seelen zu blicken?</p>
@@ -168,7 +168,7 @@
             </button>
         </div>
 
-        <!-- Step 3: Countdown -->
+        <!-- Schritt 3: Der 5 Sekunden Countdown -->
         <div id="step-countdown" class="hidden flex flex-col items-center justify-center">
             <p id="countdown-val" class="countdown-text gothic-title">5</p>
             <p id="ritual-msg" class="uppercase tracking-widest text-zinc-600 mt-4">Beschwörung läuft...</p>
@@ -176,7 +176,7 @@
 
     </div>
 
-    <!-- MAIN NAV (Hidden initially) -->
+    <!-- MAIN NAV -->
     <nav class="p-4 border-b border-zinc-800 sticky top-0 bg-black/95 backdrop-blur-md z-40">
         <div class="container mx-auto flex justify-between items-center">
             <div>
@@ -258,12 +258,13 @@
             currentLang = lang;
             document.getElementById('step-language').classList.add('hidden');
             
-            // UI Texte anpassen
+            // Texte basierend auf Wahl anpassen
             document.getElementById('initiation-title').innerText = translations[lang].initTitle;
             document.getElementById('initiation-desc').innerText = translations[lang].initDesc;
             document.querySelector('#step-initiation button').innerText = translations[lang].btn;
             document.getElementById('ritual-msg').innerText = translations[lang].msg;
 
+            // Zeige den Knopf Schritt
             document.getElementById('step-initiation').classList.remove('hidden');
         }
 
@@ -288,7 +289,7 @@
             document.getElementById('ritual-overlay').classList.add('opacity-0');
             setTimeout(() => {
                 document.getElementById('ritual-overlay').classList.add('hidden');
-                loadNextChunk();
+                loadNextChunk(); // Erstes Stück laden
             }, 500);
         }
 
@@ -301,7 +302,7 @@
                 price: parseFloat((Math.random() * 500 + 5).toFixed(2)),
                 icon: icons[Math.floor(Math.random() * icons.length)],
                 desc: "Fragment der Finsternis.",
-                classic: index < 10
+                classic: index < 50
             };
         }
 
